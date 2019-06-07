@@ -1,0 +1,9 @@
+*.pyc
+*~
+*.sqlite*
+*.orig
+*.log
+venv/
+app.cfg
+/newrelic.ini
+/uwsgi.ini

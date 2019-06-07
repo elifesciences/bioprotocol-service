@@ -1,0 +1,2 @@
+# Django 2.2 LTS, supported until April 2022
+django==2.2.*
