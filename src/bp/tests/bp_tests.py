@@ -1,3 +1,5 @@
+import os
+from os.path import join
 from datetime import datetime, timezone
 from unittest.mock import patch
 import json
@@ -26,6 +28,9 @@ class Logic(TestCase):
         fixture = json.loads(json_fixture)
         fixture["msid"] = 12345
         self.fixture = fixture
+
+        this_dir = os.path.dirname(os.path.realpath(__file__))
+        self.fixture_dir = join(this_dir, "fixtures")
 
     def test_logic_row_count(self):
         self.assertEqual(logic.row_count(), 0)
@@ -75,6 +80,11 @@ class Logic(TestCase):
     def test_validate_bad_data(self):
         bad_result = {}
         self.assertRaises(logic.ValidationError, logic.validate, bad_result)
+
+    def test_add_result(self):
+        fixture = join(self.fixture_dir, "example-output.json")
+        logic.add_result(json.load(open(fixture, "r")))
+        self.assertEqual(logic.row_count(), 6)
 
 
 class FundamentalViews(TestCase):

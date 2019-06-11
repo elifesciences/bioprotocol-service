@@ -31,7 +31,6 @@ def rename_key(d, o, n):
 
 
 def merge(a, b):
-    print("a", a, "b", b)
     a.update(b)
     return a
 
