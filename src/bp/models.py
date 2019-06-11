@@ -18,8 +18,11 @@ class ArticleProtocol(models.Model):
     protocol_status = models.BooleanField()
     uri = models.URLField()
 
-    datetime_record_created = models.DateTimeField()
-    datetime_record_updated = models.DateTimeField()
+    datetime_record_created = models.DateTimeField(auto_now_add=True)
+    datetime_record_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [("msid", "protocol_sequencing_number")]
 
     def __repr__(self):
         # '<ArticleProtocol 24419#s4-1 'Antibodies'>
@@ -30,4 +33,5 @@ class ArticleProtocol(models.Model):
         )
 
     def __str__(self):
+        # '24419#s4-1'
         return "%s#%s" % (self.msid, self.protocol_sequencing_number)

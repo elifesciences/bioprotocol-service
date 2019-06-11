@@ -1,5 +1,8 @@
 from django.http import HttpResponse, JsonResponse
 from . import logic
+import logging
+
+LOG = logging.getLogger()
 
 
 def ping(request):
@@ -7,8 +10,9 @@ def ping(request):
 
 
 def status(request):
-    resp = {"last-updated": logic.last_updated(), "row-count": logic.row_count()}
-    status = 200
-    if not resp["last-updated"] or not resp["row-count"]:
-        status = 500
-    return JsonResponse(resp, status=status)
+    try:
+        resp = {"last-updated": logic.last_updated(), "row-count": logic.row_count()}
+        return JsonResponse(resp, status=200)
+    except Exception:
+        LOG.exception("unhandled exception calling /status")
+        return JsonResponse({}, status=500)
