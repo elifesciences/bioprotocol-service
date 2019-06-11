@@ -9,6 +9,9 @@ from bp import logic
 import pytest
 from freezegun import freeze_time
 
+_this_dir = os.path.dirname(os.path.realpath(__file__))
+FIXTURE_DIR = join(_this_dir, "fixtures")
+
 
 class Model(TestCase):
     def test_foo(self):
@@ -28,9 +31,6 @@ class Logic(TestCase):
         fixture = json.loads(json_fixture)
         fixture["msid"] = 12345
         self.fixture = fixture
-
-        this_dir = os.path.dirname(os.path.realpath(__file__))
-        self.fixture_dir = join(this_dir, "fixtures")
 
     def test_logic_row_count(self):
         self.assertEqual(logic.row_count(), 0)
@@ -82,7 +82,7 @@ class Logic(TestCase):
         self.assertRaises(logic.ValidationError, logic.validate, bad_result)
 
     def test_add_result(self):
-        fixture = join(self.fixture_dir, "example-output.json")
+        fixture = join(FIXTURE_DIR, "example-output.json")
         logic.add_result(json.load(open(fixture, "r")))
         self.assertEqual(logic.row_count(), 6)
 
@@ -107,6 +107,16 @@ class FundamentalViews(TestCase):
             self.assertEqual(resp.json(), {})
 
 
-class Views(TestCase):
+class APIViews(TestCase):
     def setUp(self):
-        pass
+        self.c = Client()
+
+    def test_article_protocol_dne(self):
+        resp = self.c.get(urls.reverse("article", kwargs={"msid": 42}))
+        self.assertEqual(resp.status_code, 404)
+
+    def test_article_protocol(self):
+        fixture = join(FIXTURE_DIR, "example-output.json")
+        logic.add_result(json.load(open(fixture, "r")))
+        resp = self.c.get(urls.reverse("article", kwargs={"msid": 12345}))
+        self.assertEqual(resp.status_code, 200)

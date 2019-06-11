@@ -47,6 +47,25 @@ def ensure(x, msg):
 #
 
 
+def protocol_data(msid):
+    # {
+    #    "type": "section",
+    #    "title": "title",
+    #    "content": [...],
+    #    "bioprotocol": {...}
+    # }
+
+    protocol_data = models.ArticleProtocol.objects.filter(msid=msid)
+    if not protocol_data:
+        # nothing found for given msid, raise a DNE
+        raise models.ArticleProtocol.DoesNotExist()
+
+    return {}
+
+
+#
+
+
 def pre_process(result):
     "takes BP output and converts it to something our system can eat"
     try:
