@@ -36,14 +36,14 @@ class Logic(TestCase):
         self.assertEqual(logic.row_count(), 0)
 
     def test_logic_row_count_non_zero(self):
-        logic._add_result(self.fixture)
+        logic._add_result_item(self.fixture)
         self.assertEqual(logic.row_count(), 1)
 
     # do I really need pytest-freezetime? can I make do with just freezetime?
     @pytest.mark.freeze_time("1997-08-29T06:14:00Z")
     def test_last_updated(self):
         "returns the date of the most recent modification to the data in the database"
-        logic._add_result(self.fixture)
+        logic._add_result_item(self.fixture)
         expected_dt = datetime(
             year=1997, month=8, day=29, hour=6, minute=14, tzinfo=timezone.utc
         ).isoformat()
@@ -58,10 +58,10 @@ class Logic(TestCase):
             year=2019, month=8, day=29, hour=6, minute=14, tzinfo=timezone.utc
         )
         with freeze_time(dt2):
-            logic._add_result(self.fixture)
+            logic._add_result_item(self.fixture)
         with freeze_time(dt1):
             self.fixture["msid"] = 12344
-            logic._add_result(self.fixture)
+            logic._add_result_item(self.fixture)
         expected_dt = dt2.isoformat()
         self.assertEqual(logic.last_updated(), expected_dt)
 
@@ -82,10 +82,44 @@ class Logic(TestCase):
         self.assertRaises(logic.ValidationError, logic.validate, bad_result)
 
     def test_add_result(self):
+        "an entire result from BP can be processed, validated and inserted"
         fixture = join(FIXTURE_DIR, "example-output.json")
         logic.add_result(json.load(open(fixture, "r")))
         self.assertEqual(logic.row_count(), 6)
 
+    def test_add_result_bad_item(self):
+        "a result with a bad item is not discarded entirely"
+        fixture = join(FIXTURE_DIR, "example-output.json")
+        result = json.load(open(fixture, "r"))
+        del result["data"][0]["URI"]  # fails validation 'all keys must be present'
+        logic.add_result(result)
+        self.assertEqual(logic.row_count(), 5)
+
+    def test_add_result_retval(self):
+        "`add_result` returns a map of results"
+        fixture = join(FIXTURE_DIR, "example-output.json")
+        results = logic.add_result(json.load(open(fixture, "r")))
+        self.assertTrue(logic.has_all_keys(results, ["msid", "successful", "failed"]))
+        self.assertTrue(
+            all(
+                [
+                    isinstance(results["successful"], list),
+                    isinstance(results["failed"], list),
+                    len(results["successful"]) == 6,
+                    len(results["failed"]) == 0,
+                ]
+            )
+        )
+
+    def test_add_result_retval_with_failures(self):
+        "`add_result` returns a map of results, including failures"
+        fixture = join(FIXTURE_DIR, "example-output.json")
+        result = json.load(open(fixture, "r"))
+        del result["data"][0]["URI"]  # fails validation 'all keys must be present'
+        results = logic.add_result(result)
+        failure = results["failed"][0]
+        expected_failure = "ProcessingError: 'KeyError' thrown with message \"'URI'\" on data: {'ProtocolSequencingNumber': 's4-1', 'ProtocolTitle': 'Antibodies', 'IsProtocol': False, 'ProtocolStatus': 0, 'msid': 12345}"
+        self.assertEqual(logic.format_error(failure), expected_failure)
 
 class FundamentalViews(TestCase):
     def setUp(self):

@@ -5,12 +5,31 @@ import logging
 LOG = logging.getLogger()
 
 
-class ValidationError(Exception):
+class BPError(RuntimeError):
+    data = None
+    original = None
+
+
+class ValidationError(BPError):
     pass
 
 
-class ProcessingError(Exception):
+class ProcessingError(BPError):
     pass
+
+
+def format_error(bperr):
+    # "ValidationError: 'KeyError' thrown with message 'URI' on data: {...}"
+    clsname = lambda e: e.__class__.__name__
+    return "%s: %r thrown with message %r on data: %s" % (
+        clsname(bperr),
+        clsname(bperr.original),
+        str(bperr),
+        bperr.data,
+    )
+
+
+#
 
 
 def first(x):
@@ -44,6 +63,13 @@ def ensure(x, msg):
         raise AssertionError(msg)
 
 
+def splitfilter(fn, lst):
+    a = []
+    b = []
+    [(a if fn(x) else b).append(x) for x in lst]
+    return a, b
+
+
 #
 
 
@@ -75,7 +101,8 @@ def pre_process(result):
         return result
     except Exception as e:
         pe = ProcessingError(str(e))
-        # pe.data = result # disabled for now until we need it
+        pe.data = result
+        pe.original = e
         raise pe
 
 
@@ -101,11 +128,12 @@ def validate(result):
         return result
     except Exception as e:
         ve = ValidationError(str(e))
-        # ve.data = result # disabled for now until we need it
+        ve.data = result
+        ve.original = e
         raise ve
 
 
-def _add_result(result):
+def _add_result_item(result):
     "handles individual results in the `data` list"
     try:
         result = pre_process(result)
@@ -113,11 +141,9 @@ def _add_result(result):
         ap = models.ArticleProtocol(**result)
         ap.save()
         return ap
-    except ProcessingError as pe:
-        LOG.error("failed to transform raw BP data", extra={"data": pe.data})
-
-    except ValidationError as ve:
-        LOG.error("failed to validate transformed BP data", extra={"data": ve.data})
+    except (ProcessingError, ValidationError) as pe:
+        LOG.error(format_error(pe))
+        return pe
 
     except:
         LOG.exception("unhandled exception attempting to add row to database")
@@ -127,7 +153,11 @@ def _add_result(result):
 def add_result(result):
     msid = result["elifeID"]
     result_list = result["data"]
-    return [_add_result(merge(result, {"msid": msid})) for result in result_list]
+    result_list = [
+        _add_result_item(merge(result, {"msid": msid})) for result in result_list
+    ]
+    failed, successful = splitfilter(lambda x: isinstance(x, BPError), result_list)
+    return {"msid": msid, "successful": successful, "failed": failed}
 
 
 def last_updated():
