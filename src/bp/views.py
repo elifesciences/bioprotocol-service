@@ -2,8 +2,13 @@ from django.views.decorators.http import require_http_methods
 from django.http import HttpResponse, JsonResponse
 from . import logic, models
 import logging
+import json
 
 LOG = logging.getLogger()
+
+
+def error(message, status=500):
+    return JsonResponse({"error": message}, status=status)
 
 
 def ping(request):
@@ -16,16 +21,30 @@ def status(request):
         return JsonResponse(resp, status=200)
     except Exception:
         LOG.exception("unhandled exception calling /status")
-        return JsonResponse({}, status=500)
+        return error("unexpected error")
 
 
 @require_http_methods(["HEAD", "GET", "POST"])
 def article(request, msid):
     try:
         if request.method == "POST":
-            data = request.body
-            results = logic.add_result(data)
+            if "application/json" not in request.content_type.lower():
+                return error(
+                    "failed to find supported content-type (application/json)", 400
+                )
+            try:
+                # TODO: check body length
+                # TODO: check body encoding
+                data = json.loads(request.body)
+            except Exception as e:
+                return error("failed to parse given JSON", 400)
+
+            if not data:
+                return error("empty data", 400)
+
+            results = logic.add_result({"elifeID": msid, "data": data})
             response = {
+                "msid": msid,
                 "successful": len(results["successful"]),
                 "failed": len(results["failed"]),
             }

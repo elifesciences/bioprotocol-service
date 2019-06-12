@@ -34,11 +34,11 @@ def format_error(bperr):
 #
 
 PROTOCOL_DATA_KEYS = [
-        "protocol_sequencing_number",
-        "protocol_title",
-        "is_protocol",
-        "protocol_status",
-        "uri",
+    "protocol_sequencing_number",
+    "protocol_title",
+    "is_protocol",
+    "protocol_status",
+    "uri",
 ]
 
 # TODO: response representation hasn't been decided upon, this is just temporary

@@ -205,12 +205,13 @@ class FundamentalViews(TestCase):
         with patch("bp.logic.last_updated", raises=RuntimeError):
             resp = self.c.get(urls.reverse("status"))
             self.assertEqual(resp.status_code, 500)
-            self.assertEqual(resp.json(), {})
+            self.assertEqual(resp.json(), {"error": "unexpected error"})
 
 
 class APIViews(TestCase):
     def setUp(self):
         self.c = Client()
+        self.article_url = urls.reverse("article", kwargs={"msid": 12345})
 
     def test_article_protocol_dne(self):
         "a request for an article that does not exist returns 404, not found"
@@ -226,32 +227,77 @@ class APIViews(TestCase):
         "a request for an article exists returns, 200 successful request"
         fixture = join(FIXTURE_DIR, "example-output.json")
         logic.add_result(json.load(open(fixture, "r")))
-        resp = self.c.get(urls.reverse("article", kwargs={"msid": 12345}))
+        resp = self.c.get(self.article_url)
         self.assertEqual(resp.status_code, 200)
 
     def test_article_protocol_head(self):
         "a HEAD request for an article that exists returns, 200 successful request"
         fixture = join(FIXTURE_DIR, "example-output.json")
         logic.add_result(json.load(open(fixture, "r")))
-        resp = self.c.head(urls.reverse("article", kwargs={"msid": 12345}))
+        resp = self.c.head(self.article_url)
         self.assertEqual(resp.status_code, 200)
 
     def test_article_protocol_data(self):
         "a request for article data returns a valid response"
-        pass
+        fixture = join(FIXTURE_DIR, "example-output.json")
+        logic.add_result(json.load(open(fixture, "r")))
+        resp = self.c.get(self.article_url)
+        for row in resp.json():
+            self.assertTrue(utils.has_only_keys(row, logic.PROTOCOL_DATA_KEYS))
 
     def test_article_protocol_post(self):
         "a POST request with article data returns a successful response"
-        pass
+        fixture = join(FIXTURE_DIR, "example-output.json")
+        post_body = json.load(open(fixture, "r"))["data"]  # just rows
+        # https://docs.djangoproject.com/en/2.2/topics/testing/tools/#django.test.Client.post
+        resp = self.c.post(self.article_url, post_body, content_type="application/json")
+        self.assertEqual(resp.status_code, 200)
+
+    def test_article_protocol_post_wonky_encoding(self):
+        "a POST request with good article data but a slightly wonky content_type still makes it through"
+        fixture = join(FIXTURE_DIR, "example-output.json")
+        post_body = json.load(open(fixture, "r"))["data"]
+        resp = self.c.post(
+            self.article_url,
+            json.dumps(post_body),
+            content_type="  Application/JSON;text/xml   ",
+        )
+        self.assertEqual(resp.status_code, 200)
+
+    def test_article_protocol_post_bad_encoding(self):
+        "a POST request with good data but bad content-encoding header returns a failed response"
+        fixture = join(FIXTURE_DIR, "example-output.json")
+        post_body = json.load(open(fixture, "r"))["data"]
+        resp = self.c.post(
+            self.article_url, json.dumps(post_body), content_type="text/plain"
+        )
+        self.assertEqual(resp.status_code, 400)
 
     def test_article_protocol_post_bad_data(self):
         "a POST request with bad data returns a failed response"
-        pass
+        resp = self.c.post(self.article_url, "foo", content_type="application/json")
+        self.assertEqual(resp.status_code, 400)
+
+    def test_article_protocol_post_no_data(self):
+        "a POST request with invalid data returns a failed response"
+        post_body = []
+        resp = self.c.post(self.article_url, post_body, content_type="application/json")
+        self.assertEqual(resp.status_code, 400)
 
     def test_article_protocol_post_invalid_data(self):
         "a POST request with invalid data returns a failed response"
-        pass
+        post_body = [{"foo": "bar"}]
+        resp = self.c.post(self.article_url, post_body, content_type="application/json")
+        self.assertEqual(resp.status_code, 400)
+        expected_response = {"msid": 12345, "successful": 0, "failed": 1}
+        self.assertEqual(resp.json(), expected_response)
 
     def test_article_protocol_post_mixed_invalid_data(self):
         "a POST request with some invalid and some valid data returns a failed response"
-        pass
+        fixture = join(FIXTURE_DIR, "example-output.json")
+        post_body = json.load(open(fixture, "r"))["data"]
+        post_body[0]["foo"] = "bar"  # extra key
+        resp = self.c.post(self.article_url, post_body, content_type="application/json")
+        self.assertEqual(resp.status_code, 400)
+        expected_response = {"msid": 12345, "successful": 5, "failed": 1}
+        self.assertEqual(resp.json(), expected_response)
