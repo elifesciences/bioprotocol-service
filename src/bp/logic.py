@@ -33,17 +33,18 @@ def format_error(bperr):
 # public response data handling
 #
 
-# TODO: response representation hasn't been decided upon, this is just temporary
-def serialise_protocol_data(apobj):
-    "converts internal representation of protocol data into the one served to the public"
-    keys = [
+PROTOCOL_DATA_KEYS = [
         "protocol_sequencing_number",
         "protocol_title",
         "is_protocol",
         "protocol_status",
         "uri",
-    ]
-    return {k: getattr(apobj, k) for k in keys}
+]
+
+# TODO: response representation hasn't been decided upon, this is just temporary
+def serialise_protocol_data(apobj):
+    "converts internal representation of protocol data into the one served to the public"
+    return {k: getattr(apobj, k) for k in PROTOCOL_DATA_KEYS}
 
 
 # TODO: response representation hasn't been decided upon, this is just temporary

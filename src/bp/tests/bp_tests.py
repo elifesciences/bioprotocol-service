@@ -180,6 +180,13 @@ class Logic(TestCase):
         self.assertTrue(isinstance(data, list))
         self.assertEqual(len(data), 6)
 
+    def test_protocol_data_valid(self):
+        "article protocol data we're returning is valid."
+        fixture = join(FIXTURE_DIR, "example-output.json")
+        msid = logic.add_result(json.load(open(fixture, "r")))["msid"]
+        for row in logic.protocol_data(msid):
+            self.assertTrue(utils.has_only_keys(row, logic.PROTOCOL_DATA_KEYS))
+
 
 class FundamentalViews(TestCase):
     def setUp(self):
