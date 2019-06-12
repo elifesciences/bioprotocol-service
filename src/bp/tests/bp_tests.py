@@ -121,6 +121,31 @@ class Logic(TestCase):
         expected_failure = "ProcessingError: 'KeyError' thrown with message \"'URI'\" on data: {'ProtocolSequencingNumber': 's4-1', 'ProtocolTitle': 'Antibodies', 'IsProtocol': False, 'ProtocolStatus': 0, 'msid': 12345}"
         self.assertEqual(logic.format_error(failure), expected_failure)
 
+    def test_add_result_item_twice(self):
+        "adding a result item twice does an update"
+        good_result = {
+            "protocol_sequencing_number": "s4-3",
+            "protocol_title": "Cell culture and transfection",
+            "is_protocol": True,
+            "protocol_status": 0,
+            "uri": "https://en.bio-protocol.org/rap.aspx?eid=24419&item=s4-3",
+            "msid": 12345,
+        }
+        logic.upsert(good_result)
+        self.assertEqual(logic.row_count(), 1)
+        logic.upsert(good_result)
+        self.assertEqual(logic.row_count(), 1)
+
+    def test_add_result_twice(self):
+        "adding a result set twice does updates"
+        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = json.load(open(fixture, "r"))
+        logic.add_result(fixture)
+        self.assertEqual(logic.row_count(), 6)
+        logic.add_result(fixture)
+        self.assertEqual(logic.row_count(), 6)
+
+
 class FundamentalViews(TestCase):
     def setUp(self):
         self.c = Client()

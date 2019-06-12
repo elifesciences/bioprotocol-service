@@ -70,6 +70,41 @@ def splitfilter(fn, lst):
     return a, b
 
 
+def subdict(d, key_list):
+    return {k: v for k, v in d.items() if k in key_list}
+
+
+def create_or_update(
+    Model, orig_data, key_list=None, create=True, update=True, commit=True, **overrides
+):
+    inst = None
+    created = updated = False
+    data = {}
+    data.update(orig_data)
+    data.update(overrides)
+    key_list = key_list or data.keys()
+    try:
+        # try and find an entry of Model using the key fields in the given data
+        inst = Model.objects.get(**subdict(data, key_list))
+        # object exists, otherwise DoesNotExist would have been raised
+        if update:
+            [setattr(inst, key, val) for key, val in data.items()]
+            updated = True
+    except Model.DoesNotExist:
+        if create:
+            inst = Model(**data)
+            created = True
+
+    if (updated or created) and commit:
+        inst.full_clean()
+        inst.save()
+
+    # it is possible to neither create nor update.
+    # if create=True and update=False and object already exists, you'll get: (obj, False, False)
+    # if the model cannot be found then None is returned: (None, False, False)
+    return (inst, created, updated)
+
+
 #
 
 
@@ -133,14 +168,20 @@ def validate(result):
         raise ve
 
 
+def upsert(result):
+    return first(
+        create_or_update(
+            models.ArticleProtocol, result, ["msid", "protocol_sequencing_number"]
+        )
+    )
+
+
 def _add_result_item(result):
     "handles individual results in the `data` list"
     try:
         result = pre_process(result)
         result = validate(result)
-        ap = models.ArticleProtocol(**result)
-        ap.save()
-        return ap
+        return upsert(result)
     except (ProcessingError, ValidationError) as pe:
         LOG.error(format_error(pe))
         return pe
