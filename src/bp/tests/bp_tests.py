@@ -5,7 +5,7 @@ from unittest.mock import patch
 import json
 from django import urls
 from django.test import TestCase, Client
-from bp import logic
+from bp import logic, models, utils
 import pytest
 from freezegun import freeze_time
 
@@ -119,7 +119,7 @@ class Logic(TestCase):
         "`add_result` returns a map of results"
         fixture = join(FIXTURE_DIR, "example-output.json")
         results = logic.add_result(json.load(open(fixture, "r")))
-        self.assertTrue(logic.has_all_keys(results, ["msid", "successful", "failed"]))
+        self.assertTrue(utils.has_all_keys(results, ["msid", "successful", "failed"]))
         self.assertTrue(
             all(
                 [
@@ -164,6 +164,21 @@ class Logic(TestCase):
         self.assertEqual(logic.row_count(), 6)
         logic.add_result(fixture)
         self.assertEqual(logic.row_count(), 6)
+
+    def test_protocol_data_no_article(self):
+        "raises a DNE error when requested article does not exist"
+        msid = 42
+        self.assertRaises(
+            models.ArticleProtocol.DoesNotExist, logic.protocol_data, msid
+        )
+
+    def test_protocol_data(self):
+        "a list of article protocol data is returned"
+        fixture = join(FIXTURE_DIR, "example-output.json")
+        msid = logic.add_result(json.load(open(fixture, "r")))["msid"]
+        data = logic.protocol_data(msid)
+        self.assertTrue(isinstance(data, list))
+        self.assertEqual(len(data), 6)
 
 
 class FundamentalViews(TestCase):
@@ -216,4 +231,20 @@ class APIViews(TestCase):
 
     def test_article_protocol_data(self):
         "a request for article data returns a valid response"
-        # ...
+        pass
+
+    def test_article_protocol_post(self):
+        "a POST request with article data returns a successful response"
+        pass
+
+    def test_article_protocol_post_bad_data(self):
+        "a POST request with bad data returns a failed response"
+        pass
+
+    def test_article_protocol_post_invalid_data(self):
+        "a POST request with invalid data returns a failed response"
+        pass
+
+    def test_article_protocol_post_mixed_invalid_data(self):
+        "a POST request with some invalid and some valid data returns a failed response"
+        pass

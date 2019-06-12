@@ -1,5 +1,5 @@
-import re
-from . import models
+from . import models, utils
+from .utils import rename_key, ensure, first, merge, splitfilter
 import logging
 
 LOG = logging.getLogger()
@@ -31,101 +31,30 @@ def format_error(bperr):
 
 #
 
-
-def first(x):
-    return x[0]
-
-
-def titlecase_to_crocodile_case(titlecase_string):
-    bits = re.findall("[A-Z][^A-Z]*", titlecase_string)
-    return "_".join(bits).lower()
-
-
-def rename_key(d, o, n):
-    cpy = {}
-    cpy.update(d)
-    cpy[n] = cpy[o]
-    del cpy[o]
-    return cpy
-
-
-def merge(a, b):
-    a.update(b)
-    return a
-
-
-def has_all_keys(d, key_list):
-    return all([k in d for k in key_list])
-
-
-def has_only_keys(d, key_list):
-    return all([k in key_list for k in d.keys()])
-
-
-def ensure(x, msg):
-    if not x:
-        raise AssertionError(msg)
-
-
-def splitfilter(fn, lst):
-    a = []
-    b = []
-    [(a if fn(x) else b).append(x) for x in lst]
-    return a, b
-
-
-def subdict(d, key_list):
-    return {k: v for k, v in d.items() if k in key_list}
-
-
-def create_or_update(
-    Model, orig_data, key_list=None, create=True, update=True, commit=True, **overrides
-):
-    inst = None
-    created = updated = False
-    data = {}
-    data.update(orig_data)
-    data.update(overrides)
-    key_list = key_list or data.keys()
-    try:
-        # try and find an entry of Model using the key fields in the given data
-        inst = Model.objects.get(**subdict(data, key_list))
-        # object exists, otherwise DoesNotExist would have been raised
-        if update:
-            [setattr(inst, key, val) for key, val in data.items()]
-            updated = True
-    except Model.DoesNotExist:
-        if create:
-            inst = Model(**data)
-            created = True
-
-    if (updated or created) and commit:
-        inst.full_clean()
-        inst.save()
-
-    # it is possible to neither create nor update.
-    # if create=True and update=False and object already exists, you'll get: (obj, False, False)
-    # if the model cannot be found then None is returned: (None, False, False)
-    return (inst, created, updated)
+#
+# TODO: response representation hasn't been decided upon, this is just a placeholder
+#
+def protocol_data_item(apobj):
+    "converts internal representation of protocol data into one served to the journal"
+    keys = [
+        "protocol_sequencing_number",
+        "protocol_title",
+        "is_protocol",
+        "protocol_status",
+        "uri",
+    ]
+    return {k: getattr(apobj, k) for k in keys}
 
 
 #
-
-
+# TODO: response representation hasn't been decided upon, this is just a placeholder
+#
 def protocol_data(msid):
-    # {
-    #    "type": "section",
-    #    "title": "title",
-    #    "content": [...],
-    #    "bioprotocol": {...}
-    # }
-
     protocol_data = models.ArticleProtocol.objects.filter(msid=msid)
     if not protocol_data:
         # nothing found for given msid, raise a DNE
         raise models.ArticleProtocol.DoesNotExist()
-
-    return {}
+    return list(map(protocol_data_item, protocol_data))
 
 
 #
@@ -136,7 +65,7 @@ def pre_process(result):
     try:
         result = rename_key(result, "URI", "Uri")
         result = rename_key(result, "msid", "Msid")
-        result = {titlecase_to_crocodile_case(k): v for k, v in result.items()}
+        result = {utils.titlecase_to_crocodile_case(k): v for k, v in result.items()}
         return result
     except Exception as e:
         pe = ProcessingError(str(e))
@@ -157,13 +86,13 @@ def validate(result):
             "msid",
         ]
         ensure(
-            has_all_keys(result, expected_keys),
+            utils.has_all_keys(result, expected_keys),
             "result is missing keys: %s"
             % ", ".join(set(expected_keys) - set(result.keys())),
         )
 
         ensure(
-            has_only_keys(result, expected_keys),
+            utils.has_only_keys(result, expected_keys),
             "result has unexpected extra data: %s"
             % ", ".join(set(result.keys()) - set(expected_keys)),
         )
@@ -180,7 +109,7 @@ def validate(result):
 
 def upsert(result):
     return first(
-        create_or_update(
+        utils.create_or_update(
             models.ArticleProtocol, result, ["msid", "protocol_sequencing_number"]
         )
     )
