@@ -30,12 +30,12 @@ def format_error(bperr):
 
 
 #
+# public response data handling
+#
 
-#
-# TODO: response representation hasn't been decided upon, this is just a placeholder
-#
-def protocol_data_item(apobj):
-    "converts internal representation of protocol data into one served to the journal"
+# TODO: response representation hasn't been decided upon, this is just temporary
+def serialise_protocol_data(apobj):
+    "converts internal representation of protocol data into the one served to the public"
     keys = [
         "protocol_sequencing_number",
         "protocol_title",
@@ -46,17 +46,37 @@ def protocol_data_item(apobj):
     return {k: getattr(apobj, k) for k in keys}
 
 
-#
-# TODO: response representation hasn't been decided upon, this is just a placeholder
-#
+# TODO: response representation hasn't been decided upon, this is just temporary
 def protocol_data(msid):
+    """returns a list of protocol data given an msid
+    raises ArticleProtocol.DoesNotExist if no data for given msid found"""
     protocol_data = models.ArticleProtocol.objects.filter(msid=msid)
     if not protocol_data:
-        # nothing found for given msid, raise a DNE
         raise models.ArticleProtocol.DoesNotExist()
-    return list(map(protocol_data_item, protocol_data))
+    return [serialise_protocol_data(apobj) for apobj in protocol_data]
 
 
+def last_updated():
+    """returns an iso8601 formatted date of the most recently updated row in db. 
+    returns None if no data in database."""
+    try:
+        ap = first(
+            models.ArticleProtocol.objects.all().order_by("-datetime_record_updated")
+        )
+        dt = ap.datetime_record_updated.isoformat()
+        return dt
+    except IndexError:
+        # no data in database
+        return None
+
+
+def row_count():
+    "returns the total number of rows in database"
+    return models.ArticleProtocol.objects.count()
+
+
+#
+# bio-protocol data handling
 #
 
 
@@ -138,22 +158,3 @@ def add_result(result):
     ]
     failed, successful = splitfilter(lambda x: isinstance(x, BPError), result_list)
     return {"msid": msid, "successful": successful, "failed": failed}
-
-
-def last_updated():
-    """returns an iso8601 formatted date of the most recently updated row in db. 
-    returns None if no data in database."""
-    try:
-        ap = first(
-            models.ArticleProtocol.objects.all().order_by("-datetime_record_updated")
-        )
-        dt = ap.datetime_record_updated.isoformat()
-        return dt
-    except IndexError:
-        # no data in database
-        return None
-
-
-def row_count():
-    "returns the total number of rows in database"
-    return models.ArticleProtocol.objects.count()
