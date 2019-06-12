@@ -19,6 +19,8 @@ class Model(TestCase):
 
 
 class Logic(TestCase):
+    maxDiff = None
+
     def setUp(self):
         json_fixture = """
         {
@@ -77,9 +79,27 @@ class Logic(TestCase):
         }
         self.assertEqual(logic.validate(good_result), good_result)
 
-    def test_validate_bad_data(self):
+    def test_validate_missing_keys(self):
         bad_result = {}
-        self.assertRaises(logic.ValidationError, logic.validate, bad_result)
+        with self.assertRaises(logic.ValidationError) as err:
+            logic.validate(bad_result)
+        expected_message = "ValidationError: 'AssertionError' thrown with message 'result is missing keys: "
+        self.assertTrue(logic.format_error(err.exception).startswith(expected_message))
+
+    def test_validate_extra_keys(self):
+        bad_result = {
+            "protocol_sequencing_number": "s4-3",
+            "protocol_title": "Cell culture and transfection",
+            "is_protocol": True,
+            "protocol_status": 0,
+            "uri": "https://en.bio-protocol.org/rap.aspx?eid=24419&item=s4-3",
+            "msid": 12345,
+            "foo": "bar",
+        }
+        with self.assertRaises(logic.ValidationError) as err:
+            logic.validate(bad_result)
+        expected_message = "ValidationError: 'AssertionError' thrown with message 'result has unexpected extra data: foo'"
+        self.assertTrue(logic.format_error(err.exception).startswith(expected_message))
 
     def test_add_result(self):
         "an entire result from BP can be processed, validated and inserted"
@@ -171,11 +191,29 @@ class APIViews(TestCase):
         self.c = Client()
 
     def test_article_protocol_dne(self):
+        "a request for an article that does not exist returns 404, not found"
         resp = self.c.get(urls.reverse("article", kwargs={"msid": 42}))
         self.assertEqual(resp.status_code, 404)
 
+    def test_article_protocol_dne_head(self):
+        "a HEAD request for an article that does not exist returns 404, not found"
+        resp = self.c.head(urls.reverse("article", kwargs={"msid": 42}))
+        self.assertEqual(resp.status_code, 404)
+
     def test_article_protocol(self):
+        "a request for an article exists returns, 200 successful request"
         fixture = join(FIXTURE_DIR, "example-output.json")
         logic.add_result(json.load(open(fixture, "r")))
         resp = self.c.get(urls.reverse("article", kwargs={"msid": 12345}))
         self.assertEqual(resp.status_code, 200)
+
+    def test_article_protocol_head(self):
+        "a HEAD request for an article that exists returns, 200 successful request"
+        fixture = join(FIXTURE_DIR, "example-output.json")
+        logic.add_result(json.load(open(fixture, "r")))
+        resp = self.c.head(urls.reverse("article", kwargs={"msid": 12345}))
+        self.assertEqual(resp.status_code, 200)
+
+    def test_article_protocol_data(self):
+        "a request for article data returns a valid response"
+        # ...

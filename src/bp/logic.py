@@ -58,6 +58,10 @@ def has_all_keys(d, key_list):
     return all([k in d for k in key_list])
 
 
+def has_only_keys(d, key_list):
+    return all([k in key_list for k in d.keys()])
+
+
 def ensure(x, msg):
     if not x:
         raise AssertionError(msg)
@@ -156,6 +160,12 @@ def validate(result):
             has_all_keys(result, expected_keys),
             "result is missing keys: %s"
             % ", ".join(set(expected_keys) - set(result.keys())),
+        )
+
+        ensure(
+            has_only_keys(result, expected_keys),
+            "result has unexpected extra data: %s"
+            % ", ".join(set(result.keys()) - set(expected_keys)),
         )
 
         # todo: we can do better than just key checking
