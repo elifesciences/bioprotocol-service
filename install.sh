@@ -8,6 +8,8 @@ if [ -e requirements.lock ]; then
     # remove the .lock file when you want to recreate it
     pip install -r requirements.lock
 else
+    pip install wheel # prevents "error: invalid command 'bdist_wheel'". 
+                      # not effective within requirements.txt
     pip install -r requirements.txt
     echo "locking..."
     pip freeze > requirements.lock
