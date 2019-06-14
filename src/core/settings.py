@@ -36,7 +36,10 @@ def cfg(path, default=0xDEADBEEF):
         "false": False,
     }  # cast any obvious booleans
     try:
-        val = DYNCONFIG.get(*path.split("."))
+        bits = path.split(".")
+        if len(bits) == 1:  # read whole section as dict
+            return {key: lu.get(val, val) for key, val in DYNCONFIG.items(bits[0])}
+        val = DYNCONFIG.get(*bits)
         return lu.get(val, val)
     except (
         configparser.NoOptionError,
@@ -117,6 +120,7 @@ DATABASES = {
     }
 }
 
+SQS = cfg("sqs")
 
 LANGUAGE_CODE = "en-us"
 
