@@ -1,14 +1,17 @@
 from django.views.decorators.http import require_http_methods
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse as DJsonResponse
 from . import logic, models
 import logging
 import json
 
 LOG = logging.getLogger()
 
+def JsonResponse(*args, **kwargs):
+    kwargs['json_dumps_params'] = {'indent': 4}
+    return DJsonResponse(*args, **kwargs)
+
 def error(message, status=500):
     return JsonResponse({"error": message}, status=status)
-
 
 @require_http_methods(["HEAD", "GET"])
 def ping(request):
