@@ -6,15 +6,15 @@ import json
 
 LOG = logging.getLogger()
 
-
 def error(message, status=500):
     return JsonResponse({"error": message}, status=status)
 
 
+@require_http_methods(["HEAD", "GET"])
 def ping(request):
     return HttpResponse("pong", content_type="text/plain")
 
-
+@require_http_methods(["HEAD", "GET"])
 def status(request):
     try:
         resp = {"last-updated": logic.last_updated(), "row-count": logic.row_count()}
