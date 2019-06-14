@@ -1,4 +1,5 @@
 Django==2.2.2
+newrelic==4.20.0.120
 psycopg2==2.8.3
 pytz==2019.1
 sqlparse==0.3.0

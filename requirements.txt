@@ -3,3 +3,4 @@ django==2.2.*
 # per Django docs: https://docs.djangoproject.com/en/2.2/ref/databases/#postgresql-notes
 psycopg2>=2.5.4
 uwsgi
+newrelic
