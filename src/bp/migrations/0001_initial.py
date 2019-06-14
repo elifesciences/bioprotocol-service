@@ -7,25 +7,30 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='ArticleProtocol',
+            name="ArticleProtocol",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('msid', models.PositiveIntegerField()),
-                ('protocol_sequencing_number', models.CharField(max_length=25)),
-                ('protocol_title', models.CharField(max_length=250)),
-                ('is_protocol', models.BooleanField()),
-                ('protocol_status', models.BooleanField()),
-                ('uri', models.URLField()),
-                ('datetime_record_created', models.DateTimeField(auto_now_add=True)),
-                ('datetime_record_updated', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("msid", models.PositiveIntegerField()),
+                ("protocol_sequencing_number", models.CharField(max_length=25)),
+                ("protocol_title", models.CharField(max_length=250)),
+                ("is_protocol", models.BooleanField()),
+                ("protocol_status", models.BooleanField()),
+                ("uri", models.URLField()),
+                ("datetime_record_created", models.DateTimeField(auto_now_add=True)),
+                ("datetime_record_updated", models.DateTimeField(auto_now=True)),
             ],
-            options={
-                'unique_together': {('msid', 'protocol_sequencing_number')},
-            },
-        ),
+            options={"unique_together": {("msid", "protocol_sequencing_number")}},
+        )
     ]

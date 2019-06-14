@@ -36,7 +36,7 @@ def article(request, msid):
                 # TODO: check body length
                 # TODO: check body encoding
                 data = json.loads(request.body)
-            except Exception as e:
+            except Exception:
                 return error("failed to parse given JSON", 400)
 
             if not data:
@@ -56,7 +56,7 @@ def article(request, msid):
             # returning a list is unsafe??
             return JsonResponse(art_data, status=200, safe=False)
     except models.ArticleProtocol.DoesNotExist:
-        return JsonResponse({}, status=404)
+        return error("Not found", status=404)
     except Exception:
         LOG.exception("unhandled exception calling /article")
-        return JsonResponse({}, status=500)
+        return error("Server error")
