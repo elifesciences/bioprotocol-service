@@ -11,7 +11,7 @@ class Command(BaseCommand):
     help = "listens for updates to articles"
 
     def handle(self, *args, **options):
-        if not settings.EVENT_QUEUE:
+        if not settings.SQS['queue-name']:
             LOG.error("no queue name found. a queue name can be set in your 'app.cfg'.")
             sys.exit(1)
         try:
