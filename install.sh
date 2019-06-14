@@ -5,7 +5,7 @@ source venv/bin/activate
 
 echo "installing ..."
 if [ -e requirements.lock ]; then
-    # remove the .lock file when you want to recreate it
+    # just delete the .lock file when you want to recreate it
     pip install -r requirements.lock
 else
     pip install wheel # prevents "error: invalid command 'bdist_wheel'". 
@@ -19,3 +19,6 @@ fi
 if [ ! -e app.cfg ]; then
     ln -s elife.cfg app.cfg
 fi
+
+echo "installing/updating database ..."
+./src/manage.py migrate --no-input
