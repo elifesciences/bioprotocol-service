@@ -121,6 +121,7 @@ DATABASES = {
 }
 
 SQS = cfg("sqs")
+ELIFE_GATEWAY = cfg("gateway.host", "https://api.elifesciences.org")
 BP_AUTH = cfg("bioprotocol-authentication")
 
 LANGUAGE_CODE = "en-us"

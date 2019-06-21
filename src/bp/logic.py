@@ -258,8 +258,8 @@ def _deliver_protocol_data(msid, protocol_data):
     padded_msid = "elife" + pad_msid(msid)
     url = "https://dev.bio-protocol.org/api/" + padded_msid + "?action=sendArticle"
     auth = (settings.BP_AUTH["user"], settings.BP_AUTH["password"])
-    headers = {"Content-Type": "application/json", "user-agent": settings.USER_AGENT}
-    resp = requests.post(url, data=protocol_data, headers=headers, auth=auth)
+    headers = {"user-agent": settings.USER_AGENT}
+    resp = requests.post(url, json=protocol_data, headers=headers, auth=auth)
     resp.raise_for_status()
     return resp
 
@@ -274,4 +274,27 @@ def deliver_protocol_data(msid, protocol_data):
         requests.exceptions.ConnectionError,
         requests.exceptions.HTTPError,
     ) as e:
+        LOG.error("failed to deliver article to BioProtocol: %s" % msid)
         return e.response
+    except Exception as e:
+        LOG.exception(
+            "unhandled exception attempting to deliver article '%s' to BioProtocol: %s"
+            % (msid, str(e))
+        )
+        pass
+
+
+#
+
+
+def download_elife_article(msid):
+    "downloads the latest article data for given msid"
+    url = settings.ELIFE_GATEWAY + "/articles/" + str(msid)
+    resp = requests.get(url)
+    return resp.json()
+
+
+def fetch_parse_deliver_data(msid):
+    article_json = download_elife_article(msid)
+    protocol_data = extract_protocols(article_json)
+    return deliver_protocol_data(msid, protocol_data)

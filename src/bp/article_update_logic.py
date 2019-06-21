@@ -2,16 +2,9 @@ from django.conf import settings
 import json, boto3
 import logging
 import newrelic.agent
+from . import logic
 
 LOG = logging.getLogger()
-
-
-def do_something_with_article(event_id):
-    # download xml and send it to their API?
-    # download ajson and send it to their API?
-    # do a transformation first?
-    # ???
-    pass
 
 
 # listens to the configured SQS queue (see app.cfg) for updates to articles
@@ -55,25 +48,22 @@ def handler(json_event):
         LOG.info("handling event %s" % json_event)
         event = json.loads(json_event)
         # rule: event id will always be a string
-        event_id, event_type = event["id"], event["type"]
-        event_id = str(event_id)
+        event_id, event_type = int(event["id"]), event["type"]
     except (KeyError, ValueError):
         LOG.error("skipping unparseable event: %s", str(json_event)[:50])
         return None  # important
 
+    if event_type != "article":
+        # not interested in non-article events
+        return None  # important
+
+    msid = event_id
+
     try:
-        # process event
-        handlers = {
-            "article": do_something_with_article,
-            "-unhandled": lambda _: LOG.warn(
-                "sinking event for unhandled type: %s", event_type
-            ),
-        }
-        fn = handlers[event_type if event_type in handlers else "-unhandled"]
-        fn(event_id)
+        logic.fetch_parse_deliver_data(msid)
 
     except BaseException:
-        LOG.exception("unhandled exception handling event %s", event)
+        LOG.exception("unhandled exception handling event: %s", json_event)
 
     return None  # important, ensures results don't accumulate
 
