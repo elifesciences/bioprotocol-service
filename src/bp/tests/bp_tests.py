@@ -1,3 +1,4 @@
+import responses
 import os
 from os.path import join
 from datetime import datetime, timezone
@@ -8,6 +9,7 @@ from django.test import TestCase, Client
 from bp import logic, models, utils
 import pytest
 from freezegun import freeze_time
+from unittest import skip
 
 _this_dir = os.path.dirname(os.path.realpath(__file__))
 FIXTURE_DIR = join(_this_dir, "fixtures")
@@ -15,6 +17,33 @@ FIXTURE_DIR = join(_this_dir, "fixtures")
 
 class BaseCase(TestCase):
     maxDiff = None
+
+
+class SendProtocols(BaseCase):
+    def test_protocols_sent(self):
+        msid = 3
+        fixture = join(FIXTURE_DIR, "elife-00003-v1.xml.json")
+        data = json.load(open(fixture, "r"))
+        protocol_data = logic.extract_protocols(data)
+        url = "https://dev.bio-protocol.org/api/elife00003?action=sendArticle"
+
+        with responses.RequestsMock() as mock_resp:
+            mock_resp.add(responses.POST, url, status=200)
+            resp = logic.deliver_protocol_data(msid, protocol_data)
+            self.assertEqual(resp.status_code, 200)
+
+    @skip("too slow with backoff enabled")
+    def test_protocols_not_sent(self):
+        msid = 3
+        fixture = join(FIXTURE_DIR, "elife-00003-v1.xml.json")
+        data = json.load(open(fixture, "r"))
+        protocol_data = logic.extract_protocols(data)
+        url = "https://dev.bio-protocol.org/api/elife00003?action=sendArticle"
+
+        with responses.RequestsMock() as mock_resp:
+            mock_resp.add(responses.POST, url, status=500)
+            resp = logic.deliver_protocol_data(msid, protocol_data)
+            self.assertEqual(resp.status_code, 500)
 
 
 class ExtractProtocols(BaseCase):

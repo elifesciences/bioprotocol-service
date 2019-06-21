@@ -121,6 +121,7 @@ DATABASES = {
 }
 
 SQS = cfg("sqs")
+BP_AUTH = cfg("bioprotocol-authentication")
 
 LANGUAGE_CODE = "en-us"
 
@@ -148,3 +149,7 @@ LOGGING = {
 }
 
 APPEND_SLASH = False
+
+USER_AGENT = (
+    "eLife/bioprotocol-service (https://github.com/elifesciences/bioprotocol-service)"
+)

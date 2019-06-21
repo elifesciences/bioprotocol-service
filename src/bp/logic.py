@@ -1,6 +1,9 @@
+from django.conf import settings
 from . import models, utils
 from .utils import rename_key, ensure, first, merge, splitfilter
 import logging
+import requests, requests.exceptions
+import backoff
 from collections import OrderedDict
 
 LOG = logging.getLogger()
@@ -232,5 +235,43 @@ def extract_protocols(article_json):
             target, [("id", "ProtocolSequencingNumber"), ("title", "ProtocolTitle")]
         )
 
-    targets = list(map(scrub_targets, targets))
-    return {"Version": 4, "Protocols": targets}
+    return list(map(scrub_targets, targets))
+
+
+def pad_msid(msid):
+    ensure(isinstance(msid, int), "msid must be an integer")
+    return "%05d" % msid
+
+
+@backoff.on_exception(
+    backoff.expo,
+    (
+        requests.exceptions.Timeout,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.HTTPError,
+    ),
+    max_tries=5,
+    max_time=60,
+)
+def _deliver_protocol_data(msid, protocol_data):
+    "POSTs protocol data to BioProtocol."
+    padded_msid = "elife" + pad_msid(msid)
+    url = "https://dev.bio-protocol.org/api/" + padded_msid + "?action=sendArticle"
+    auth = (settings.BP_AUTH["user"], settings.BP_AUTH["password"])
+    headers = {"Content-Type": "application/json", "user-agent": settings.USER_AGENT}
+    resp = requests.post(url, data=protocol_data, headers=headers, auth=auth)
+    resp.raise_for_status()
+    return resp
+
+
+def deliver_protocol_data(msid, protocol_data):
+    """POSTs protocol data to BioProtocol.
+    exponential backoff will attempt to deliver data N times. the first successful or final unsuccessful response is returned"""
+    try:
+        return _deliver_protocol_data(msid, protocol_data)
+    except (
+        requests.exceptions.Timeout,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.HTTPError,
+    ) as e:
+        return e.response

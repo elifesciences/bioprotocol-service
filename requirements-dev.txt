@@ -5,3 +5,4 @@ pytest-freezegun
 pyflakes
 black
 ipython
+responses
