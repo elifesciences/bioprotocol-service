@@ -18,12 +18,35 @@ class BaseCase(TestCase):
 
 
 class ExtractProtocols(BaseCase):
-    def test_a(self):
+    def test_example_case(self):
+        "what is scraped matches the example provided"
         fixture = join(FIXTURE_DIR, "elife-00003-v1.xml.json")
         data = json.load(open(fixture, "r"))
         expected = join(FIXTURE_DIR, "example-post.json")
         expected = json.load(open(expected, "r"))
         self.assertEqual(logic.extract_protocols(data), expected)
+
+    def test_bad_data(self):
+        bad_data_list = [None, "", 1, []]
+        for bad_data in bad_data_list:
+            self.assertRaises(AssertionError, logic.extract_protocols, bad_data)
+
+    def test_empty_data(self):
+        self.assertEqual(logic.extract_protocols({}), None)
+
+    def test_partial_data_missing_title(self):
+        partial_fixture = {
+            "title": "Materials and methods",
+            "content": [{"type": "section", "id": "Foo"}],  # no 'title' present
+        }
+        self.assertRaises(AssertionError, logic.extract_protocols, partial_fixture)
+
+    def test_partial_data_missing_id(self):
+        partial_fixture = {
+            "title": "Materials and methods",
+            "content": [{"type": "section", "title": "Foo"}],  # no 'id' present
+        }
+        self.assertRaises(AssertionError, logic.extract_protocols, partial_fixture)
 
 
 class Model(BaseCase):

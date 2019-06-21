@@ -191,6 +191,10 @@ def visit(data, pred, fn, coll=None):
 
 
 def extract_protocols(article_json):
+    ensure(isinstance(article_json, dict), "given data must be a dictionary")
+    if not article_json:
+        return None
+
     # first, find the 'materials and methods' section
     def pred1(data):
         return (
@@ -211,13 +215,22 @@ def extract_protocols(article_json):
         return isinstance(data, dict) and data.get("type") == "section"
 
     def extractor(data, coll):
-        subdata = utils.subdict(data, ["id", "title"])
-        subdata = utils.rename_keys(
-            subdata, [("id", "ProtocolSequencingNumber"), ("title", "ProtocolTitle")]
-        )
-        coll.append(subdata)
+        coll.append(utils.subdict(data, ["id", "title"]))
         return data
 
     targets = []
     visit(mandms, pred2, extractor, targets)
+
+    # finally, ensure each of the targets is exactly as expected
+    def scrub_targets(target):
+        ensure(
+            len(target) == 2 and "id" in target and "title" in target,
+            "expecting two keys 'id' and 'title' but only found: %s"
+            % list(target.keys()),
+        )
+        return utils.rename_keys(
+            target, [("id", "ProtocolSequencingNumber"), ("title", "ProtocolTitle")]
+        )
+
+    targets = list(map(scrub_targets, targets))
     return {"Version": 4, "Protocols": targets}
