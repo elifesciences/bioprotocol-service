@@ -6,16 +6,20 @@ import json
 
 LOG = logging.getLogger()
 
+
 def JsonResponse(*args, **kwargs):
-    kwargs['json_dumps_params'] = {'indent': 4}
+    kwargs["json_dumps_params"] = {"indent": 4}
     return DJsonResponse(*args, **kwargs)
+
 
 def error(message, status=500):
     return JsonResponse({"error": message}, status=status)
 
+
 @require_http_methods(["HEAD", "GET"])
 def ping(request):
     return HttpResponse("pong", content_type="text/plain")
+
 
 @require_http_methods(["HEAD", "GET"])
 def status(request):

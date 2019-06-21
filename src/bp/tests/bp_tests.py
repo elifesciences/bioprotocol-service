@@ -13,14 +13,25 @@ _this_dir = os.path.dirname(os.path.realpath(__file__))
 FIXTURE_DIR = join(_this_dir, "fixtures")
 
 
-class Model(TestCase):
+class BaseCase(TestCase):
+    maxDiff = None
+
+
+class ExtractProtocols(BaseCase):
+    def test_a(self):
+        fixture = join(FIXTURE_DIR, "elife-00003-v1.xml.json")
+        data = json.load(open(fixture, "r"))
+        expected = join(FIXTURE_DIR, "example-post.json")
+        expected = json.load(open(expected, "r"))
+        self.assertEqual(logic.extract_protocols(data), expected)
+
+
+class Model(BaseCase):
     def test_foo(self):
         pass
 
 
-class Logic(TestCase):
-    maxDiff = None
-
+class Logic(BaseCase):
     def setUp(self):
         json_fixture = """
         {

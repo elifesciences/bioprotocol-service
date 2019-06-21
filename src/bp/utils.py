@@ -18,6 +18,12 @@ def rename_key(d, o, n):
     return cpy
 
 
+def rename_keys(d, pair_list):
+    for o, n in pair_list:
+        d = rename_key(d, o, n)
+    return d
+
+
 def merge(a, b):
     a.update(b)
     return a

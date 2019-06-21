@@ -1,6 +1,7 @@
 from . import models, utils
 from .utils import rename_key, ensure, first, merge, splitfilter
 import logging
+from collections import OrderedDict
 
 LOG = logging.getLogger()
 
@@ -159,3 +160,64 @@ def add_result(result):
     ]
     failed, successful = splitfilter(lambda x: isinstance(x, BPError), result_list)
     return {"msid": msid, "successful": successful, "failed": failed}
+
+
+#
+
+
+def visit(data, pred, fn, coll=None):
+    "visits every value in the given data and applies `fn` when `pred` is true "
+    if pred(data):
+        if coll is not None:
+            data = fn(data, coll)
+        else:
+            data = fn(data)
+        # why don't we return here after matching?
+        # the match may contain matches within child elements (lists, dicts)
+        # we want to visit them, too
+    if isinstance(data, OrderedDict):
+        results = OrderedDict()
+        for key, val in data.items():
+            results[key] = visit(val, pred, fn, coll)
+        return results
+    elif isinstance(data, dict):
+        return OrderedDict(
+            [(key, visit(val, pred, fn, coll)) for key, val in data.items()]
+        )
+    elif isinstance(data, list):
+        return [visit(row, pred, fn, coll) for row in data]
+    # unsupported type/no further matches
+    return data
+
+
+def extract_protocols(article_json):
+    # first, find the 'materials and methods' section
+    def pred1(data):
+        return (
+            isinstance(data, dict)
+            and data.get("title")
+            and data["title"].lower() == "materials and methods"
+        )
+
+    def identity(data, coll):
+        coll.append(data["content"])
+        return data
+
+    mandms = []
+    visit(article_json, pred1, identity, mandms)
+
+    # next, extract the id and title of each sub-section
+    def pred2(data):
+        return isinstance(data, dict) and data.get("type") == "section"
+
+    def extractor(data, coll):
+        subdata = utils.subdict(data, ["id", "title"])
+        subdata = utils.rename_keys(
+            subdata, [("id", "ProtocolSequencingNumber"), ("title", "ProtocolTitle")]
+        )
+        coll.append(subdata)
+        return data
+
+    targets = []
+    visit(mandms, pred2, extractor, targets)
+    return {"Version": 4, "Protocols": targets}
