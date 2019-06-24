@@ -222,13 +222,13 @@ class Logic(BaseCase):
 
     def test_add_result(self):
         "an entire result from BP can be processed, validated and inserted"
-        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         logic.add_result(json.load(open(fixture, "r")))
         self.assertEqual(logic.row_count(), 6)
 
     def test_add_result_bad_item(self):
         "a result with a bad item is not discarded entirely"
-        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         result = json.load(open(fixture, "r"))
         del result["data"][0]["URI"]  # fails validation 'all keys must be present'
         logic.add_result(result)
@@ -236,7 +236,7 @@ class Logic(BaseCase):
 
     def test_add_result_retval(self):
         "`add_result` returns a map of results"
-        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         results = logic.add_result(json.load(open(fixture, "r")))
         self.assertTrue(utils.has_all_keys(results, ["msid", "successful", "failed"]))
         self.assertTrue(
@@ -252,7 +252,7 @@ class Logic(BaseCase):
 
     def test_add_result_retval_with_failures(self):
         "`add_result` returns a map of results, including failures"
-        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         result = json.load(open(fixture, "r"))
         del result["data"][0]["URI"]  # fails validation 'all keys must be present'
         results = logic.add_result(result)
@@ -277,7 +277,7 @@ class Logic(BaseCase):
 
     def test_add_result_twice(self):
         "adding a result set twice does updates"
-        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         fixture = json.load(open(fixture, "r"))
         logic.add_result(fixture)
         self.assertEqual(logic.row_count(), 6)
@@ -293,7 +293,7 @@ class Logic(BaseCase):
 
     def test_protocol_data(self):
         "a list of article protocol data is returned"
-        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         msid = logic.add_result(json.load(open(fixture, "r")))["msid"]
         data = logic.protocol_data(msid)
         self.assertTrue(isinstance(data, list))
@@ -301,7 +301,7 @@ class Logic(BaseCase):
 
     def test_protocol_data_valid(self):
         "article protocol data we're returning is valid."
-        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         msid = logic.add_result(json.load(open(fixture, "r")))["msid"]
         for row in logic.protocol_data(msid):
             self.assertTrue(utils.has_only_keys(row, logic.PROTOCOL_DATA_KEYS))
@@ -346,21 +346,21 @@ class APIViews(TestCase):
 
     def test_article_protocol(self):
         "a request for an article exists returns, 200 successful request"
-        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         logic.add_result(json.load(open(fixture, "r")))
         resp = self.c.get(self.article_url)
         self.assertEqual(resp.status_code, 200)
 
     def test_article_protocol_head(self):
         "a HEAD request for an article that exists returns, 200 successful request"
-        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         logic.add_result(json.load(open(fixture, "r")))
         resp = self.c.head(self.article_url)
         self.assertEqual(resp.status_code, 200)
 
     def test_article_protocol_data(self):
         "a request for article data returns a valid response"
-        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         logic.add_result(json.load(open(fixture, "r")))
         resp = self.c.get(self.article_url)
         for row in resp.json():
@@ -368,7 +368,7 @@ class APIViews(TestCase):
 
     def test_article_protocol_post(self):
         "a POST request with article data returns a successful response"
-        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         post_body = json.load(open(fixture, "r"))["data"]  # just rows
         # https://docs.djangoproject.com/en/2.2/topics/testing/tools/#django.test.Client.post
         resp = self.c.post(self.article_url, post_body, content_type="application/json")
@@ -376,7 +376,7 @@ class APIViews(TestCase):
 
     def test_article_protocol_post_wonky_encoding(self):
         "a POST request with good article data but a slightly wonky content_type still makes it through"
-        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         post_body = json.load(open(fixture, "r"))["data"]
         resp = self.c.post(
             self.article_url,
@@ -387,7 +387,7 @@ class APIViews(TestCase):
 
     def test_article_protocol_post_bad_encoding(self):
         "a POST request with good data but bad content-encoding header returns a failed response"
-        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         post_body = json.load(open(fixture, "r"))["data"]
         resp = self.c.post(
             self.article_url, json.dumps(post_body), content_type="text/plain"
@@ -415,7 +415,7 @@ class APIViews(TestCase):
 
     def test_article_protocol_post_mixed_invalid_data(self):
         "a POST request with some invalid and some valid data returns a failed response"
-        fixture = join(FIXTURE_DIR, "example-output.json")
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         post_body = json.load(open(fixture, "r"))["data"]
         post_body[0]["foo"] = "bar"  # extra key
         resp = self.c.post(self.article_url, post_body, content_type="application/json")
