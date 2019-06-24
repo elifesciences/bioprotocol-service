@@ -87,7 +87,7 @@ class ExtractProtocols(BaseCase):
         "what is scraped matches the example provided"
         fixture = join(FIXTURE_DIR, "elife-00003-v1.xml.json")
         data = json.load(open(fixture, "r"))
-        expected = join(FIXTURE_DIR, "example-post.json")
+        expected = join(FIXTURE_DIR, "elife-post-to-bp.json")
         expected = json.load(open(expected, "r"))
         self.assertEqual(logic.extract_protocols(data), expected)
 
