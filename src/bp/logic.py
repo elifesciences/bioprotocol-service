@@ -287,11 +287,40 @@ def deliver_protocol_data(msid, protocol_data):
 #
 
 
-def download_elife_article(msid):
+@backoff.on_exception(
+    backoff.expo,
+    (
+        requests.exceptions.Timeout,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.HTTPError,
+    ),
+    max_tries=5,
+    max_time=60,
+)
+def _download_elife_article(msid):
     "downloads the latest article data for given msid"
     url = settings.ELIFE_GATEWAY + "/articles/" + str(msid)
     resp = requests.get(url)
+    resp.raise_for_status()
     return resp.json()
+
+
+def download_elife_article(msid):
+    try:
+        return _download_elife_article(msid)
+    except (
+        requests.exceptions.Timeout,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.HTTPError,
+    ) as e:
+        LOG.error("failed to download article-json from Lax: %s" % msid)
+        return e.response
+    except Exception as e:
+        LOG.exception(
+            "unhandled exception attempting to download json for article '%s' from Lax: %s"
+            % (msid, str(e))
+        )
+        pass
 
 
 def fetch_parse_deliver_data(msid):

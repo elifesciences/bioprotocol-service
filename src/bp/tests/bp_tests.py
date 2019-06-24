@@ -1,3 +1,4 @@
+from django.conf import settings
 import responses
 import os
 from os.path import join
@@ -20,6 +21,8 @@ class BaseCase(TestCase):
 
 
 class SendProtocols(BaseCase):
+    "sending of protocol data TO BioProtocol"
+
     def test_protocols_sent(self):
         msid = 3
         fixture = join(FIXTURE_DIR, "elife-00003-v1.xml.json")
@@ -32,7 +35,7 @@ class SendProtocols(BaseCase):
             resp = logic.deliver_protocol_data(msid, protocol_data)
             self.assertEqual(resp.status_code, 200)
 
-    @skip("too slow with backoff enabled")
+    @skip("slow with backoff")
     def test_protocols_not_sent(self):
         msid = 3
         fixture = join(FIXTURE_DIR, "elife-00003-v1.xml.json")
@@ -47,6 +50,8 @@ class SendProtocols(BaseCase):
 
 
 class ExtractProtocols(BaseCase):
+    "extraction of protocol data from article-json"
+
     def test_example_case(self):
         "what is scraped matches the example provided"
         fixture = join(FIXTURE_DIR, "elife-00003-v1.xml.json")
@@ -76,6 +81,28 @@ class ExtractProtocols(BaseCase):
             "content": [{"type": "section", "title": "Foo"}],  # no 'id' present
         }
         self.assertRaises(AssertionError, logic.extract_protocols, partial_fixture)
+
+    def test_download_article_json(self):
+        "returns the expected article-json on success"
+        msid = 3
+        fixture = join(FIXTURE_DIR, "elife-00003-v1.xml.json")
+        data = json.load(open(fixture, "r"))
+        url = settings.ELIFE_GATEWAY + "/articles/" + str(msid)
+
+        with responses.RequestsMock() as mock_resp:
+            mock_resp.add(responses.GET, url, json=data, status=200)
+            resp = logic.download_elife_article(msid)
+            self.assertEqual(resp, data)
+
+    @skip("slow with backoff")
+    def test_download_article_json_failure(self):
+        "returns a http error response on failure"
+        msid = 3
+        url = settings.ELIFE_GATEWAY + "/articles/" + str(msid)
+        with responses.RequestsMock() as mock_resp:
+            mock_resp.add(responses.GET, url, status=500)
+            resp = logic.download_elife_article(msid)
+            self.assertEqual(resp.status_code, 500)
 
 
 class Model(BaseCase):
@@ -252,6 +279,8 @@ class Logic(BaseCase):
 
 
 class FundamentalViews(TestCase):
+    "application views not related to business logic"
+
     def setUp(self):
         self.c = Client()
 
