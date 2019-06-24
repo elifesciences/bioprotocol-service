@@ -28,7 +28,7 @@ class ReloadProtocolData(BaseCase):
         self.assertEqual(models.ArticleProtocol.objects.count(), 0)
         msid = 3
         # data correct as of 2019-06-24, it may change again :(
-        fixture = join(FIXTURE_DIR, "example-api-output.json")
+        fixture = join(FIXTURE_DIR, "bp-api-output.json")
         data = json.load(open(fixture, "r"))
         url = "https://dev.bio-protocol.org/api/elife00003"
         with responses.RequestsMock() as mock_resp:
