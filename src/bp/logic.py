@@ -241,11 +241,14 @@ def extract_protocols(article_json):
 @backoff.on_exception(
     backoff.expo,
     (
+        # most networking related exceptions subclass Timeout or ConnectionError
         requests.exceptions.Timeout,
         requests.exceptions.ConnectionError,
-        requests.exceptions.HTTPError,
+        # requests.exceptions.HTTPError, # 4xx, 5xx - don't re-attempt these
+        # a request may redirect to another url that fails with any number of *other* exceptions though
+        # https://2.python-requests.org/en/master/_modules/requests/exceptions/
     ),
-    max_tries=5,
+    max_tries=3,
     max_time=60,
 )
 def _get(url, **kwargs):
@@ -281,9 +284,9 @@ def get(url, **kwargs):
     (
         requests.exceptions.Timeout,
         requests.exceptions.ConnectionError,
-        requests.exceptions.HTTPError,
+        # requests.exceptions.HTTPError, # 4xx, 5xx - don't reattempt these
     ),
-    max_tries=5,
+    max_tries=3,
     max_time=60,
 )
 def _deliver_protocol_data(msid, protocol_data):
@@ -350,10 +353,9 @@ def fetch_protocol_data(msid):
 
 def reload_article_data(msid):
     bp_data = fetch_protocol_data(msid)
-
-    # coerce output from their API to what they POST to us
-    bp_data = utils.rename_keys(
-        bp_data, [("elifeid", "elifeID"), ("Protocols", "data")]
-    )
-
-    bp_data and add_result(bp_data)
+    if bp_data:
+        # coerce output from their API to what they POST to us
+        bp_data = utils.rename_keys(
+            bp_data, [("elifeid", "elifeID"), ("Protocols", "data")]
+        )
+        bp_data and add_result(bp_data)
