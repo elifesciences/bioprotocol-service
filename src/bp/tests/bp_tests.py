@@ -41,6 +41,7 @@ class SendProtocols(BaseCase):
     "sending of protocol data TO BioProtocol"
 
     def test_protocols_sent(self):
+        "sucessfully POSTed article update to BP"
         msid = 3
         fixture = join(FIXTURE_DIR, "elife-00003-v1.xml.json")
         data = json.load(open(fixture, "r"))
@@ -52,7 +53,8 @@ class SendProtocols(BaseCase):
             resp = logic.deliver_protocol_data(msid, protocol_data)
             self.assertEqual(resp.status_code, 200)
 
-    def test_protocols_not_sent(self):
+    def test_protocols_bad_send(self):
+        "failed to successfully POST article update to BP"
         msid = 3
         fixture = join(FIXTURE_DIR, "elife-00003-v1.xml.json")
         data = json.load(open(fixture, "r"))
@@ -64,6 +66,18 @@ class SendProtocols(BaseCase):
             resp = logic.deliver_protocol_data(msid, protocol_data)
             self.assertEqual(resp.status_code, 500)
 
+            # ... ? check the logs at this point for failed articles? 
+            # how to alert BP there are updates to articles?
+
+    def test_protocols_not_sent(self):
+        "not all article updates are sent"
+        msid = 3
+        fixture = {"snippet": {"status": "poa"}}
+        url = settings.ELIFE_GATEWAY + "/articles/" + str(msid)
+        with responses.RequestsMock() as mock_resp:
+            mock_resp.add(responses.GET, url, json=fixture, status=200)
+            resp = logic.download_parse_deliver_data(msid)
+            self.assertEqual(resp, None)
 
 class ExtractProtocols(BaseCase):
     "extraction of protocol data from article-json"
