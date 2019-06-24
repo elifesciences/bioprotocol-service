@@ -66,7 +66,7 @@ class SendProtocols(BaseCase):
             resp = logic.deliver_protocol_data(msid, protocol_data)
             self.assertEqual(resp.status_code, 500)
 
-            # ... ? check the logs at this point for failed articles? 
+            # ... ? check the logs at this point for failed articles?
             # how to alert BP there are updates to articles?
 
     def test_protocols_not_sent(self):
@@ -78,6 +78,7 @@ class SendProtocols(BaseCase):
             mock_resp.add(responses.GET, url, json=fixture, status=200)
             resp = logic.download_parse_deliver_data(msid)
             self.assertEqual(resp, None)
+
 
 class ExtractProtocols(BaseCase):
     "extraction of protocol data from article-json"

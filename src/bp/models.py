@@ -15,7 +15,7 @@ class ArticleProtocol(models.Model):
     protocol_sequencing_number = models.CharField(max_length=25)
     protocol_title = models.CharField(max_length=250)
     is_protocol = models.BooleanField()
-    protocol_status = models.BooleanField()
+    protocol_status = models.IntegerField()
     uri = models.URLField()
 
     datetime_record_created = models.DateTimeField(auto_now_add=True)
