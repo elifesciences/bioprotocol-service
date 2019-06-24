@@ -10,7 +10,8 @@ from django.test import TestCase, Client
 from bp import logic, models, utils
 import pytest
 from freezegun import freeze_time
-from unittest import skip
+
+# from unittest import skip
 
 _this_dir = os.path.dirname(os.path.realpath(__file__))
 FIXTURE_DIR = join(_this_dir, "fixtures")
@@ -51,7 +52,6 @@ class SendProtocols(BaseCase):
             resp = logic.deliver_protocol_data(msid, protocol_data)
             self.assertEqual(resp.status_code, 200)
 
-    @skip("slow with backoff")
     def test_protocols_not_sent(self):
         msid = 3
         fixture = join(FIXTURE_DIR, "elife-00003-v1.xml.json")
@@ -104,13 +104,11 @@ class ExtractProtocols(BaseCase):
         fixture = join(FIXTURE_DIR, "elife-00003-v1.xml.json")
         data = json.load(open(fixture, "r"))
         url = settings.ELIFE_GATEWAY + "/articles/" + str(msid)
-
         with responses.RequestsMock() as mock_resp:
             mock_resp.add(responses.GET, url, json=data, status=200)
             resp = logic.download_elife_article(msid)
             self.assertEqual(resp, data)
 
-    @skip("slow with backoff")
     def test_download_article_json_failure(self):
         "returns a http error response on failure"
         msid = 3

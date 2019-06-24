@@ -277,6 +277,7 @@ def get(url, **kwargs):
         custom_msg = kwargs.get("on_exception_message")
         default_msg = "unhandled exception requesting: %s" % str(e)
         LOG.exception(custom_msg or default_msg)
+        raise
 
 
 @backoff.on_exception(
@@ -328,12 +329,18 @@ def download_elife_article(msid):
     url = settings.ELIFE_GATEWAY + "/articles/" + str(msid)
     auth = (settings.BP_AUTH["user"], settings.BP_AUTH["password"])
     resp = get(url, auth=auth)
-    if resp:
+    if resp.status_code == 200:
         return resp.json()
+    return resp
 
 
 def download_parse_deliver_data(msid):
     article_json = download_elife_article(msid)
+
+    # only deliver updates to VOR articles
+    if article_json["snippet"]["status"] != "vor":
+        return
+
     protocol_data = extract_protocols(article_json)
     return deliver_protocol_data(msid, protocol_data)
 
@@ -341,18 +348,19 @@ def download_parse_deliver_data(msid):
 #
 
 
-def fetch_protocol_data(msid):
-    "fetches article data (if any) from BioProtocol and inserts it into the database."
+def download_protocol_data(msid):
+    "fetches protocol data (if any) from BioProtocol and inserts it into the database."
     padded_msid = "elife" + utils.pad_msid(msid)
     url = "https://dev.bio-protocol.org/api/" + padded_msid
     auth = (settings.BP_AUTH["user"], settings.BP_AUTH["password"])
     resp = get(url, auth=auth)
-    if resp:
+    if resp and resp.status_code == 200:
         return resp.json()
+    # return resp # bad requests are already logged. just don't return anything
 
 
 def reload_article_data(msid):
-    bp_data = fetch_protocol_data(msid)
+    bp_data = download_protocol_data(msid)
     if bp_data:
         # coerce output from their API to what they POST to us
         bp_data = utils.rename_keys(
