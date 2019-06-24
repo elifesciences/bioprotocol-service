@@ -238,9 +238,42 @@ def extract_protocols(article_json):
     return list(map(scrub_targets, targets))
 
 
-def pad_msid(msid):
-    ensure(isinstance(msid, int), "msid must be an integer")
-    return "%05d" % msid
+@backoff.on_exception(
+    backoff.expo,
+    (
+        requests.exceptions.Timeout,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.HTTPError,
+    ),
+    max_tries=5,
+    max_time=60,
+)
+def _get(url, **kwargs):
+    headers = {"user-agent": settings.USER_AGENT}
+    resp = requests.get(url, headers=headers, auth=kwargs.get("auth"))
+    resp.raise_for_status()
+    return resp
+
+
+def get(url, **kwargs):
+    try:
+        return _get(url, **kwargs)
+    except (
+        requests.exceptions.Timeout,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.HTTPError,
+    ) as e:
+        custom_msg = kwargs.get("on_error_message")
+        default_msg = "request failed with status code %r: %s" % (
+            e.response.status_code,
+            url,
+        )
+        LOG.error(custom_msg or default_msg)
+        return e.response
+    except Exception as e:
+        custom_msg = kwargs.get("on_exception_message")
+        default_msg = "unhandled exception requesting: %s" % str(e)
+        LOG.exception(custom_msg or default_msg)
 
 
 @backoff.on_exception(
@@ -255,7 +288,7 @@ def pad_msid(msid):
 )
 def _deliver_protocol_data(msid, protocol_data):
     "POSTs protocol data to BioProtocol."
-    padded_msid = "elife" + pad_msid(msid)
+    padded_msid = "elife" + utils.pad_msid(msid)
     url = "https://dev.bio-protocol.org/api/" + padded_msid + "?action=sendArticle"
     auth = (settings.BP_AUTH["user"], settings.BP_AUTH["password"])
     headers = {"user-agent": settings.USER_AGENT}
@@ -287,43 +320,40 @@ def deliver_protocol_data(msid, protocol_data):
 #
 
 
-@backoff.on_exception(
-    backoff.expo,
-    (
-        requests.exceptions.Timeout,
-        requests.exceptions.ConnectionError,
-        requests.exceptions.HTTPError,
-    ),
-    max_tries=5,
-    max_time=60,
-)
-def _download_elife_article(msid):
+def download_elife_article(msid):
     "downloads the latest article data for given msid"
     url = settings.ELIFE_GATEWAY + "/articles/" + str(msid)
-    resp = requests.get(url)
-    resp.raise_for_status()
-    return resp.json()
+    auth = (settings.BP_AUTH["user"], settings.BP_AUTH["password"])
+    resp = get(url, auth=auth)
+    if resp:
+        return resp.json()
 
 
-def download_elife_article(msid):
-    try:
-        return _download_elife_article(msid)
-    except (
-        requests.exceptions.Timeout,
-        requests.exceptions.ConnectionError,
-        requests.exceptions.HTTPError,
-    ) as e:
-        LOG.error("failed to download article-json from Lax: %s" % msid)
-        return e.response
-    except Exception as e:
-        LOG.exception(
-            "unhandled exception attempting to download json for article '%s' from Lax: %s"
-            % (msid, str(e))
-        )
-        pass
-
-
-def fetch_parse_deliver_data(msid):
+def download_parse_deliver_data(msid):
     article_json = download_elife_article(msid)
     protocol_data = extract_protocols(article_json)
     return deliver_protocol_data(msid, protocol_data)
+
+
+#
+
+
+def fetch_protocol_data(msid):
+    "fetches article data (if any) from BioProtocol and inserts it into the database."
+    padded_msid = "elife" + utils.pad_msid(msid)
+    url = "https://dev.bio-protocol.org/api/" + padded_msid
+    auth = (settings.BP_AUTH["user"], settings.BP_AUTH["password"])
+    resp = get(url, auth=auth)
+    if resp:
+        return resp.json()
+
+
+def reload_article_data(msid):
+    bp_data = fetch_protocol_data(msid)
+
+    # coerce output from their API to what they POST to us
+    bp_data = utils.rename_keys(
+        bp_data, [("elifeid", "elifeID"), ("Protocols", "data")]
+    )
+
+    bp_data and add_result(bp_data)

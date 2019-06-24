@@ -1,6 +1,11 @@
 import re
 
 
+def pad_msid(msid):
+    ensure(isinstance(msid, int), "msid must be an integer")
+    return "%05d" % msid
+
+
 def first(x):
     return x[0]
 

@@ -20,6 +20,22 @@ class BaseCase(TestCase):
     maxDiff = None
 
 
+class ReloadProtocolData(BaseCase):
+    "fetch the data from BP and add it to the database"
+
+    def test_reload_protocol_data(self):
+        self.assertEqual(models.ArticleProtocol.objects.count(), 0)
+        msid = 3
+        # data correct as of 2019-06-24, it may change again :(
+        fixture = join(FIXTURE_DIR, "example-api-output.json")
+        data = json.load(open(fixture, "r"))
+        url = "https://dev.bio-protocol.org/api/elife00003"
+        with responses.RequestsMock() as mock_resp:
+            mock_resp.add(responses.GET, url, json=data, status=200)
+            logic.reload_article_data(msid)
+            self.assertEqual(models.ArticleProtocol.objects.count(), 14)
+
+
 class SendProtocols(BaseCase):
     "sending of protocol data TO BioProtocol"
 

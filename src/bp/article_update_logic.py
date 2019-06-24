@@ -60,7 +60,7 @@ def handler(json_event):
     msid = event_id
 
     try:
-        logic.fetch_parse_deliver_data(msid)
+        logic.download_parse_deliver_data(msid)
 
     except BaseException:
         LOG.exception("unhandled exception handling event: %s", json_event)
