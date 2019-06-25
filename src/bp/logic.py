@@ -293,8 +293,8 @@ def get(url, **kwargs):
 def _deliver_protocol_data(msid, protocol_data):
     "POSTs protocol data to BioProtocol."
     padded_msid = "elife" + utils.pad_msid(msid)
-    url = "https://dev.bio-protocol.org/api/" + padded_msid + "?action=sendArticle"
-    auth = (settings.BP_AUTH["user"], settings.BP_AUTH["password"])
+    url = settings.BP["api_host"] + "/api/" + padded_msid + "?action=sendArticle"
+    auth = (settings.BP["api_user"], settings.BP["api_password"])
     headers = {"user-agent": settings.USER_AGENT}
     resp = requests.post(url, json=protocol_data, headers=headers, auth=auth)
     resp.raise_for_status()
@@ -327,8 +327,7 @@ def deliver_protocol_data(msid, protocol_data):
 def download_elife_article(msid):
     "downloads the latest article data for given msid"
     url = settings.ELIFE_GATEWAY + "/articles/" + str(msid)
-    auth = (settings.BP_AUTH["user"], settings.BP_AUTH["password"])
-    resp = get(url, auth=auth)
+    resp = get(url)
     if resp.status_code == 200:
         return resp.json()
     return resp
@@ -351,8 +350,9 @@ def download_parse_deliver_data(msid):
 def download_protocol_data(msid):
     "fetches protocol data (if any) from BioProtocol and inserts it into the database."
     padded_msid = "elife" + utils.pad_msid(msid)
-    url = "https://dev.bio-protocol.org/api/" + padded_msid
-    auth = (settings.BP_AUTH["user"], settings.BP_AUTH["password"])
+    url = settings.BP["api_host"] + "/api/" + padded_msid + "?action=sendArticle"
+    # will auth be required for prod GETs? who knows
+    auth = (settings.BP["api_user"], settings.BP["api_password"])
     resp = get(url, auth=auth)
     if resp and resp.status_code == 200:
         return resp.json()
