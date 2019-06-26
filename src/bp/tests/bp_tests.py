@@ -224,7 +224,8 @@ class Logic(BaseCase):
         "an entire result from BP can be processed, validated and inserted"
         fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         logic.add_result(json.load(open(fixture, "r")))
-        self.assertEqual(logic.row_count(), 6)
+        self.assertEqual(logic.row_count(), 3)  # 6 rows, 3 that are protocols
+        self.assertEqual(models.ArticleProtocol.objects.count(), 6)
 
     def test_add_result_bad_item(self):
         "a result with a bad item is not discarded entirely"
@@ -232,7 +233,8 @@ class Logic(BaseCase):
         result = json.load(open(fixture, "r"))
         del result["data"][0]["URI"]  # fails validation 'all keys must be present'
         logic.add_result(result)
-        self.assertEqual(logic.row_count(), 5)
+        self.assertEqual(logic.row_count(), 3)  # 5 rows, 3 that are protocols
+        self.assertEqual(models.ArticleProtocol.objects.count(), 5)
 
     def test_add_result_retval(self):
         "`add_result` returns a map of results"
@@ -280,9 +282,11 @@ class Logic(BaseCase):
         fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         fixture = json.load(open(fixture, "r"))
         logic.add_result(fixture)
-        self.assertEqual(logic.row_count(), 6)
+        self.assertEqual(logic.row_count(), 3)  # 6 rows, 3 that are protocols
+        self.assertEqual(models.ArticleProtocol.objects.count(), 6)
         logic.add_result(fixture)
-        self.assertEqual(logic.row_count(), 6)
+        self.assertEqual(logic.row_count(), 3)
+        self.assertEqual(models.ArticleProtocol.objects.count(), 6)
 
     def test_protocol_data_no_article(self):
         "raises a DNE error when requested article does not exist"
@@ -297,14 +301,15 @@ class Logic(BaseCase):
         msid = logic.add_result(json.load(open(fixture, "r")))["msid"]
         data = logic.protocol_data(msid)
         self.assertTrue(isinstance(data, list))
-        self.assertEqual(len(data), 6)
+        self.assertEqual(len(data), 3)  # 6 in fixture, 3 that are protocols
+        self.assertEqual(models.ArticleProtocol.objects.count(), 6)
 
     def test_protocol_data_valid(self):
         "article protocol data we're returning is valid."
         fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         msid = logic.add_result(json.load(open(fixture, "r")))["msid"]
         for row in logic.protocol_data(msid):
-            self.assertTrue(utils.has_only_keys(row, logic.PROTOCOL_DATA_KEYS))
+            self.assertTrue(utils.has_only_keys(row, logic.PROTOCOL_DATA_KEYS.values()))
 
 
 class FundamentalViews(TestCase):
@@ -373,7 +378,7 @@ class APIViews(TestCase):
         logic.add_result(json.load(open(fixture, "r")))
         resp = self.c.get(self.article_url)
         for row in resp.json():
-            self.assertTrue(utils.has_only_keys(row, logic.PROTOCOL_DATA_KEYS))
+            self.assertTrue(utils.has_only_keys(row, logic.PROTOCOL_DATA_KEYS.values()))
 
     def test_article_protocol_post(self):
         "a POST request with article data returns a successful response"

@@ -37,25 +37,32 @@ def format_error(bperr):
 # public response data handling
 #
 
-PROTOCOL_DATA_KEYS = [
-    "protocol_sequencing_number",
-    "protocol_title",
-    "is_protocol",
-    "protocol_status",
-    "uri",
-]
+PROTOCOL_DATA_KEYS = OrderedDict(
+    [
+        ("protocol_sequencing_number", "sequencing_number"),
+        ("protocol_title", "title"),
+        ("protocol_status", "status"),
+        ("uri", "uri"),
+    ]
+)
 
-# TODO: response representation hasn't been decided upon, this is just temporary
+
 def serialise_protocol_data(apobj):
     "converts internal representation of protocol data into the one served to the public"
-    return {k: getattr(apobj, k) for k in PROTOCOL_DATA_KEYS}
+    struct = OrderedDict(
+        [
+            (api_key, getattr(apobj, db_key))
+            for db_key, api_key in PROTOCOL_DATA_KEYS.items()
+        ]
+    )
+    struct["status"] = bool(struct["status"])
+    return struct
 
 
-# TODO: response representation hasn't been decided upon, this is just temporary
 def protocol_data(msid):
     """returns a list of protocol data given an msid
     raises ArticleProtocol.DoesNotExist if no data for given msid found"""
-    protocol_data = models.ArticleProtocol.objects.filter(msid=msid)
+    protocol_data = models.ArticleProtocol.objects.filter(msid=msid, is_protocol=True)
     if not protocol_data:
         raise models.ArticleProtocol.DoesNotExist()
     return [serialise_protocol_data(apobj) for apobj in protocol_data]
@@ -77,7 +84,7 @@ def last_updated():
 
 def row_count():
     "returns the total number of rows in database"
-    return models.ArticleProtocol.objects.count()
+    return models.ArticleProtocol.objects.filter(is_protocol=True).count()
 
 
 #
