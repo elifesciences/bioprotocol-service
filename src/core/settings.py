@@ -122,6 +122,7 @@ DATABASES = {
 
 SQS = cfg("sqs")
 ELIFE_GATEWAY = cfg("gateway.host")
+ELIFE_CONTENT_TYPE = "application/vnd.elife.bioprotocol+json;version=1"
 BP = cfg("bioprotocol")
 
 LANGUAGE_CODE = "en-us"

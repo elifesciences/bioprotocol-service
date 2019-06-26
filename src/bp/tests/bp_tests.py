@@ -350,6 +350,7 @@ class APIViews(TestCase):
         logic.add_result(json.load(open(fixture, "r")))
         resp = self.c.get(self.article_url)
         self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp["Content-Type"], "application/json")
 
     def test_article_protocol_head(self):
         "a HEAD request for an article that exists returns, 200 successful request"
@@ -357,6 +358,14 @@ class APIViews(TestCase):
         logic.add_result(json.load(open(fixture, "r")))
         resp = self.c.head(self.article_url)
         self.assertEqual(resp.status_code, 200)
+
+    def test_article_protocol_elife_ctype(self):
+        "a request for an article with a custom elife content type, gets the same content type in the response"
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
+        logic.add_result(json.load(open(fixture, "r")))
+        resp = self.c.get(self.article_url, HTTP_ACCEPT=settings.ELIFE_CONTENT_TYPE)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp["Content-Type"], settings.ELIFE_CONTENT_TYPE)
 
     def test_article_protocol_data(self):
         "a request for article data returns a valid response"
