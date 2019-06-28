@@ -2,7 +2,7 @@
 set -eu
 
 username="$1"
-password="$1"
+password="$2"
 
 function send {
     payload="$1"
