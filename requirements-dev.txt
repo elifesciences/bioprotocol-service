@@ -2,6 +2,7 @@
 pytest
 pytest-django
 pytest-freezegun
+pytest-socket
 pyflakes
 black
 ipython
