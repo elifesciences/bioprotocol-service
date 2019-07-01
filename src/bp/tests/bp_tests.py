@@ -300,15 +300,28 @@ class Logic(BaseCase):
         fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         msid = logic.add_result(json.load(open(fixture, "r")))["msid"]
         data = logic.protocol_data(msid)
-        self.assertTrue(isinstance(data, list))
-        self.assertEqual(len(data), 3)  # 6 in fixture, 3 that are protocols
-        self.assertEqual(models.ArticleProtocol.objects.count(), 6)
+        self.assertEqual(models.ArticleProtocol.objects.count(), 6)  # 6 in fixture ...
+        self.assertTrue(isinstance(data["items"], list))
+        self.assertEqual(data["total"], 3)  # ... only 3 that are protocols
+        self.assertEqual(len(data["items"]), 3)
+
+    def test_protocol_data_empty(self):
+        "an empty list of article protocol data is returned"
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
+        msid = logic.add_result(json.load(open(fixture, "r")))["msid"]
+        # leaving only non-protocol data
+        models.ArticleProtocol.objects.filter(is_protocol=True).delete()
+        data = logic.protocol_data(msid)
+        self.assertEqual(models.ArticleProtocol.objects.count(), 3)
+        self.assertTrue(isinstance(data["items"], list))
+        self.assertEqual(data["total"], 0)
+        self.assertEqual(len(data["items"]), 0)
 
     def test_protocol_data_valid(self):
         "article protocol data we're returning is valid."
         fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         msid = logic.add_result(json.load(open(fixture, "r")))["msid"]
-        for row in logic.protocol_data(msid):
+        for row in logic.protocol_data(msid)["items"]:
             self.assertTrue(utils.has_only_keys(row, logic.PROTOCOL_DATA_KEYS.values()))
 
 
@@ -376,8 +389,8 @@ class APIViews(TestCase):
         "a request for article data returns a valid response"
         fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         logic.add_result(json.load(open(fixture, "r")))
-        resp = self.c.get(self.article_url)
-        for row in resp.json():
+        resp = self.c.get(self.article_url).json()
+        for row in resp["items"]:
             self.assertTrue(utils.has_only_keys(row, logic.PROTOCOL_DATA_KEYS.values()))
 
     def test_article_protocol_post(self):

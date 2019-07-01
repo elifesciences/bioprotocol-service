@@ -39,7 +39,7 @@ def format_error(bperr):
 
 PROTOCOL_DATA_KEYS = OrderedDict(
     [
-        ("protocol_sequencing_number", "sequencing_number"),
+        ("protocol_sequencing_number", "sectionId"),
         ("protocol_title", "title"),
         ("protocol_status", "status"),
         ("uri", "uri"),
@@ -62,10 +62,13 @@ def serialise_protocol_data(apobj):
 def protocol_data(msid):
     """returns a list of protocol data given an msid
     raises ArticleProtocol.DoesNotExist if no data for given msid found"""
-    protocol_data = models.ArticleProtocol.objects.filter(msid=msid, is_protocol=True)
+    protocol_data = models.ArticleProtocol.objects.filter(msid=msid)
     if not protocol_data:
         raise models.ArticleProtocol.DoesNotExist()
-    return [serialise_protocol_data(apobj) for apobj in protocol_data]
+    # protocol data for an article may exist, but may be empty after stripping non-protocol results
+    protocol_data = protocol_data.filter(is_protocol=True)
+    items = [serialise_protocol_data(apobj) for apobj in protocol_data]
+    return {"total": len(items), "items": items}
 
 
 def last_updated():

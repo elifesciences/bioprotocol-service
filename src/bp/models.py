@@ -1,15 +1,6 @@
 from django.db import models
 
 
-"""
-      "ProtocolSequencingNumber": "s4-1",
-      "ProtocolTitle": "Antibodies",
-      "IsProtocol": false,
-      "ProtocolStatus": 0,
-      "URI": "https://en.bio-protocol.org/rap.aspx?eid=24419&item=s4-1"
-"""
-
-
 class ArticleProtocol(models.Model):
     msid = models.PositiveIntegerField()
     protocol_sequencing_number = models.CharField(max_length=25)
