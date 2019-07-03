@@ -1,14 +1,11 @@
 {
-  "Version": 4,
   "Protocols": [
     {
       "ProtocolSequencingNumber": "s4-1",
       "ProtocolTitle": "Isolation of LDs and treatments"
-
     },
     {
       "ProtocolSequencingNumber": "s4-2"
-
     }
   ]
 }

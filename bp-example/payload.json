@@ -1,77 +1,60 @@
 {
-  "Version": 4,
   "Protocols": [
     {
       "ProtocolSequencingNumber": "s4-1",
       "ProtocolTitle": "Isolation of LDs and treatments"
-
     },
     {
       "ProtocolSequencingNumber": "s4-2",
       "ProtocolTitle": "Immunoblot analysis"
-
     },
-
-
     {
       "ProtocolSequencingNumber": "s4-3",
       "ProtocolTitle": "Immunofluorescence"
-
     },
     {
       "ProtocolSequencingNumber": "s4-4",
       "ProtocolTitle": "Antibacterial assays"
-
     },
     {
       "ProtocolSequencingNumber": "s4-4-1",
       "ProtocolTitle": "The colony forming units (CFU) assay"
-
     },
     {
       "ProtocolSequencingNumber": "s4-4-2",
       "ProtocolTitle": "Gel overlay assay"
-
     },
     {
       "ProtocolSequencingNumber": "s4-4-3",
       "ProtocolTitle": "Disc diffusion assay"
-
     },
     {
       "ProtocolSequencingNumber": "s4-5",
       "ProtocolTitle": "Protein extraction from acid-urea gels"
-
     },
     {
       "ProtocolSequencingNumber": "s4-6",
       "ProtocolTitle": "In gel digestion"
-
     },
     {
       "ProtocolSequencingNumber": "s4-7",
       "ProtocolTitle": "Mass spectrometry analysis by LC-MS/MS"
-
     },
     {
       "ProtocolSequencingNumber": "s4-8",
       "ProtocolTitle": "Drosophila strains"
-
     },
     {
       "ProtocolSequencingNumber": "s4-9",
-      "ProtocolTitle": "Embryo bacterial injections",
-
+      "ProtocolTitle": "Embryo bacterial injections"
     },
     {
       "ProtocolSequencingNumber": "s4-10",
-      "ProtocolTitle": "Adult fly bacterial infections",
-
+      "ProtocolTitle": "Adult fly bacterial infections"
     },
     {
       "ProtocolSequencingNumber": "s4-11",
-      "ProtocolTitle": "Mice injection and hepatic lipid droplet treatment",
-
+      "ProtocolTitle": "Mice injection and hepatic lipid droplet treatment"
     }
   ]
 }
