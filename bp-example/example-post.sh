@@ -1,21 +1,19 @@
 #!/bin/bash
-# sends a dummy POST to the eLife test server
+# sends a dummy POST to the BioProtocol test server
 
 set -eu
-
-username="$1"
-password="$2"
 
 function send {
     payload="$1"
     echo "=> $payload"
     curl \
+        --silent \
+        --output /dev/null \
         -d "@$payload" \
         -X POST \
-        -u "$username:$password" \
         -H "Content-Type: application/json" \
         -w " (HTTP %{http_code})" \
-        https://ci--bp.elifesciences.org/bioprotocol/article/12345 
+        https://dev.bio-protocol.org/api/elife00003?action=sendArticle 
     echo
     echo
 }
