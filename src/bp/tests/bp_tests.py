@@ -89,7 +89,7 @@ class ExtractProtocols(BaseCase):
         data = json.load(open(fixture, "r"))
         expected = join(FIXTURE_DIR, "elife-post-to-bp.json")
         expected = json.load(open(expected, "r"))
-        self.assertEqual(logic.extract_protocols(data), expected)
+        self.assertEqual(logic.extract_bioprotocol_response(data), expected)
 
     def test_bad_data(self):
         bad_data_list = [None, "", 1, []]
