@@ -33,9 +33,9 @@ def format_error(bperr):
     )
 
 
-#
-# public response data handling
-#
+# elife -> public
+# handling for the data the public receives from this service
+# derived entirely from the data bioprotocol POSTs to us, but tweaked for consistency with eLife
 
 PROTOCOL_DATA_KEYS = OrderedDict(
     [
@@ -90,9 +90,8 @@ def row_count():
     return models.ArticleProtocol.objects.filter(is_protocol=True).count()
 
 
-#
-# bio-protocol data handling
-#
+# bio-protocol -> elife
+# when bio-protocol has new protocol data, they will POST that data to our API
 
 
 def pre_process(result):
@@ -175,7 +174,8 @@ def add_result(result):
     return {"msid": msid, "successful": successful, "failed": failed}
 
 
-#
+# elife -> bioprotocol
+# when a new article event is received we fetch the article, parse it and then POST it to BP
 
 
 def visit(data, pred, fn, coll=None):
@@ -246,6 +246,51 @@ def extract_protocols(article_json):
         )
 
     return list(map(scrub_targets, targets))
+
+
+# stolen from Lax
+ARTICLE_TYPE_IDX = OrderedDict(
+    [
+        ("research-article", "Research article"),
+        ("short-report", "Short report"),
+        ("research-advance", "Research advance"),
+        ("registered-report", "Registered report"),
+        ("tools-resources", "Tools and resources"),
+        ("replication-study", "Replication Study"),
+        ("correction", "Correction"),
+        ("feature", "Feature article"),
+        ("insight", "Insight"),
+        ("editorial", "Editorial"),
+    ]
+)
+
+
+def extract_article_type(article_json):
+    type_slug = article_json["snippet"]["type"]
+    if type_slug not in ARTICLE_TYPE_IDX:
+        LOG.warn(
+            "received article of unhandled type, passing value through as-is:",
+            type_slug,
+        )
+    return ARTICLE_TYPE_IDX.get(type_slug, type_slug)
+
+
+def extract_authors(article_json):
+    author_list = article_json["snippet"]["authors"]
+    return [
+        author["name"]["preferred"]
+        for author in author_list
+        if author["type"] == "person"
+    ]
+
+
+def extract_bioprotocol_response(article_json):
+    return {
+        "ArticleTitle": article_json["snippet"]["title"],
+        "ArticleType": extract_article_type(article_json),
+        "Authors": extract_authors(article_json),
+        "Protocols": extract_protocols(article_json),
+    }
 
 
 @backoff.on_exception(
@@ -350,7 +395,7 @@ def download_parse_deliver_data(msid):
     if article_json["snippet"]["status"] != "vor":
         return
 
-    protocol_data = extract_protocols(article_json)
+    protocol_data = extract_bioprotocol_response(article_json)
     return deliver_protocol_data(msid, protocol_data)
 
 

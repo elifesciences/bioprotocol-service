@@ -1,5 +1,12 @@
 {
-  "Protocols": [   
+  "ArticleTitle": "Article Title",
+  "ArticleType": "Research Article",
+  "Authors": [
+    "John Doe",
+    "Jane Doe",
+    "Ahmed al-Tayyeb Aldj"
+  ],
+  "Protocols": [
     {
       "ProtocolSequencingNumber": "s4-2"
     }
