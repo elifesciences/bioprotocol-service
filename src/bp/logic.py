@@ -274,8 +274,15 @@ def extract_article_type(article_json):
         )
     return ARTICLE_TYPE_IDX.get(type_slug, type_slug)
 
+
 def extract_authors(article_json):
-    return [author['name']['preferred'] for author in article_json['snippet']['authors']]
+    author_list = article_json["snippet"]["authors"]
+    return [
+        author["name"]["preferred"]
+        for author in author_list
+        if author["type"] == "person"
+    ]
+
 
 def extract_bioprotocol_response(article_json):
     return {
