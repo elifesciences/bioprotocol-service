@@ -266,7 +266,7 @@ ARTICLE_TYPE_IDX = OrderedDict(
 
 
 def extract_article_type(article_json):
-    type_slug = article_json["snippet"]["type"]
+    type_slug = article_json["type"]
     if type_slug not in ARTICLE_TYPE_IDX:
         LOG.warn(
             "received article of unhandled type, passing value through as-is:",
@@ -276,7 +276,7 @@ def extract_article_type(article_json):
 
 
 def extract_authors(article_json):
-    author_list = article_json["snippet"]["authors"]
+    author_list = article_json["authors"]
     return [
         author["name"]["preferred"]
         for author in author_list
@@ -286,7 +286,7 @@ def extract_authors(article_json):
 
 def extract_bioprotocol_response(article_json):
     return {
-        "ArticleTitle": article_json["snippet"]["title"],
+        "ArticleTitle": article_json["title"],
         "ArticleType": extract_article_type(article_json),
         "Authors": extract_authors(article_json),
         "Protocols": extract_protocols(article_json),
@@ -392,7 +392,7 @@ def download_parse_deliver_data(msid):
     article_json = download_elife_article(msid)
 
     # only deliver updates to VOR articles
-    if article_json["snippet"]["status"] != "vor":
+    if article_json["status"] != "vor":
         return
 
     protocol_data = extract_bioprotocol_response(article_json)

@@ -72,7 +72,7 @@ class SendProtocols(BaseCase):
     def test_protocols_not_sent(self):
         "not all article updates are sent"
         msid = 3
-        fixture = {"snippet": {"status": "poa"}}
+        fixture = {"status": "poa"}
         url = settings.ELIFE_GATEWAY + "/articles/" + str(msid)
         with responses.RequestsMock() as mock_resp:
             mock_resp.add(responses.GET, url, json=fixture, status=200)
