@@ -366,7 +366,7 @@ def deliver_protocol_data(msid, protocol_data):
         requests.exceptions.ConnectionError,
         requests.exceptions.HTTPError,
     ) as e:
-        LOG.error("failed to deliver article to BioProtocol: %s" % msid)
+        LOG.error("failed to deliver article %r to BioProtocol: %s" % (msid, str(e)))
         return e.response
     except Exception as e:
         LOG.exception(
