@@ -4,10 +4,10 @@ from django.db import models
 class ArticleProtocol(models.Model):
     msid = models.PositiveIntegerField()
     protocol_sequencing_number = models.CharField(max_length=25)
-    protocol_title = models.CharField(max_length=250)
+    protocol_title = models.CharField(max_length=500)
     is_protocol = models.BooleanField()
     protocol_status = models.IntegerField()
-    uri = models.URLField()
+    uri = models.URLField(blank=True, null=True)
 
     datetime_record_created = models.DateTimeField(auto_now_add=True)
     datetime_record_updated = models.DateTimeField(auto_now=True)
