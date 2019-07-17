@@ -211,7 +211,7 @@ class Logic(BaseCase):
             "ProtocolTitle": "Cell culture and transfection",
             "IsProtocol": True,
             "ProtocolStatus": 0,
-            "URI": " ", # empty string
+            "URI": " ",  # empty string
             "msid": 12345,
         }
         obj = logic._add_result_item(bad_result)
@@ -224,11 +224,25 @@ class Logic(BaseCase):
             "ProtocolTitle": "Cell culture and transfection",
             "IsProtocol": True,
             "ProtocolStatus": 0,
-            "URI": None, # empty string
+            "URI": None,  # empty string
             "msid": 12345,
         }
         obj = logic._add_result_item(bad_result)
         self.assertEqual(obj.uri, None)
+        self.assertEqual(models.ArticleProtocol.objects.count(), 1)
+
+    def test_super_long_title(self):
+        bad_result = {
+            "ProtocolSequencingNumber": "s4-3",
+            "ProtocolTitle": ("a" * 500) + "b",
+            "IsProtocol": True,
+            "ProtocolStatus": 0,
+            "URI": "https://en.bio-protocol.org/rap.aspx?eid=24419&item=s4-3",
+            "msid": 12345,
+        }
+        obj = logic._add_result_item(bad_result)
+        self.assertTrue("b" not in obj.protocol_title)
+        self.assertEqual(len(obj.protocol_title), 500)
         self.assertEqual(models.ArticleProtocol.objects.count(), 1)
 
     def test_validate_extra_keys(self):
