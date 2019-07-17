@@ -205,6 +205,32 @@ class Logic(BaseCase):
         expected_message = "ValidationError: 'AssertionError' thrown with message 'result is missing keys: "
         self.assertTrue(logic.format_error(err.exception).startswith(expected_message))
 
+    def test_empty_uri(self):
+        bad_result = {
+            "ProtocolSequencingNumber": "s4-3",
+            "ProtocolTitle": "Cell culture and transfection",
+            "IsProtocol": True,
+            "ProtocolStatus": 0,
+            "URI": " ", # empty string
+            "msid": 12345,
+        }
+        obj = logic._add_result_item(bad_result)
+        self.assertEqual(obj.uri, None)
+        self.assertEqual(models.ArticleProtocol.objects.count(), 1)
+
+    def test_null_uri(self):
+        bad_result = {
+            "ProtocolSequencingNumber": "s4-3",
+            "ProtocolTitle": "Cell culture and transfection",
+            "IsProtocol": True,
+            "ProtocolStatus": 0,
+            "URI": None, # empty string
+            "msid": 12345,
+        }
+        obj = logic._add_result_item(bad_result)
+        self.assertEqual(obj.uri, None)
+        self.assertEqual(models.ArticleProtocol.objects.count(), 1)
+
     def test_validate_extra_keys(self):
         bad_result = {
             "protocol_sequencing_number": "s4-3",

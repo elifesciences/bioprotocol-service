@@ -100,6 +100,9 @@ def pre_process(result):
         result = rename_key(result, "URI", "Uri")
         result = rename_key(result, "msid", "Msid")
         result = {utils.titlecase_to_crocodile_case(k): v for k, v in result.items()}
+        if not result['uri'] or not result['uri'].strip():
+            # we get a mixture of empty strings and none values, mostly none values
+            result['uri'] = None
         return result
     except Exception as e:
         pe = ProcessingError(str(e))
