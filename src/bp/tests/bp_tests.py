@@ -79,6 +79,15 @@ class SendProtocols(BaseCase):
             resp = logic.download_parse_deliver_data(msid)
             self.assertEqual(resp, None)
 
+    def test_protocols_bad_elife_response(self):
+        "elife api 'can't find' article data for us to scrape and send to BP"
+        msid = 3
+        url = settings.ELIFE_GATEWAY + "/articles/" + str(msid)
+        with responses.RequestsMock() as mock_resp:
+            mock_resp.add(responses.GET, url, status=404)
+            resp = logic.download_parse_deliver_data(msid)
+            self.assertEqual(resp, None)
+
 
 class ExtractProtocols(BaseCase):
     "extraction of protocol data from article-json"
