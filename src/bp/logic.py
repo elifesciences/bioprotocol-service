@@ -394,7 +394,19 @@ def download_elife_article(msid):
 
 
 def download_parse_deliver_data(msid):
-    article_json = download_elife_article(msid)
+    result = download_elife_article(msid)
+
+    # we failed to download article_json from the api
+    if isinstance(result, requests.Response):
+        if result.status_code == 404:
+            return  # not published, unpublished
+        LOG.exception(
+            "unhandled response from API requesting article-json for %s: %s"
+            % (utils.pad_msid(msid), result.status_code)
+        )
+        return
+
+    article_json = result
 
     # only deliver updates to VOR articles
     if article_json["status"] != "vor":
