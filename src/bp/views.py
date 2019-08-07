@@ -34,44 +34,29 @@ def status(request):
 
 @require_http_methods(["HEAD", "GET", "POST"])
 def article(request, msid):
-    acceptable_response_types = (
-        request.META.get("HTTP_ACCEPT", "application/json").lower().strip()
-    )
-
-    # service deals in json but if an elife type is in the request, it will be set as the response
-    elife_content_type = settings.ELIFE_CONTENT_TYPE
-    response_content_type = "application/json"
-    if elife_content_type in acceptable_response_types:
-        response_content_type = elife_content_type
-
     try:
         if request.method != "POST":  # GET, HEAD
 
             art_data = logic.protocol_data(msid)
-            # returning a list is unsafe??
             return JsonResponse(
-                art_data, status=200, safe=False, content_type=response_content_type
+                art_data, status=200, content_type=settings.ELIFE_CONTENT_TYPE
             )
 
         else:  # POST
 
-            requested_content_type = request.content_type.strip().lower()
+            content_encoding = request.content_type.strip().lower()
             if (
-                "application/json" not in requested_content_type
-                and elife_content_type not in requested_content_type
+                "application/json" not in content_encoding
+                and settings.ELIFE_CONTENT_TYPE not in content_encoding
             ):
-                return error(
-                    "unhandled content-type header: %s" % requested_content_type,
-                    400,
-                    response_content_type,
-                )
+                return error("unable to negotiate a content encoding", 406)
             try:
                 data = json.loads(request.body)
             except Exception:
-                return error("failed to parse given JSON", 400, response_content_type)
+                return error("failed to parse given JSON", 400)
 
             if not data:
-                return error("empty data", 400, response_content_type)
+                return error("empty request", 400)
 
             results = logic.add_result({"elifeID": msid, "data": data})
             response = {
@@ -81,11 +66,11 @@ def article(request, msid):
             }
             status_code = 200 if not results["failed"] else 400
             return JsonResponse(
-                response, status=status_code, content_type=response_content_type
+                response, status=status_code, content_type=settings.ELIFE_CONTENT_TYPE
             )
 
     except models.ArticleProtocol.DoesNotExist:
-        return error("Not found", 404, response_content_type)
+        return error("Not found", 404)
     except Exception:
         LOG.exception("unhandled exception calling /article")
-        return error("Server error", 500, response_content_type)
+        return error("Server error", 500)

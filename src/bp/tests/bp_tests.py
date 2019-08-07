@@ -412,12 +412,12 @@ class APIViews(TestCase):
         self.assertEqual(resp.status_code, 404)
 
     def test_article_protocol(self):
-        "a request for an article exists returns, 200 successful request"
+        "a request for an article that exists returns a 200 successful request with correct content-type"
         fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         logic.add_result(json.load(open(fixture, "r")))
         resp = self.c.get(self.article_url)
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp["Content-Type"], "application/json")
+        self.assertEqual(resp["Content-Type"], settings.ELIFE_CONTENT_TYPE)
 
     def test_article_protocol_head(self):
         "a HEAD request for an article that exists returns, 200 successful request"
@@ -462,13 +462,13 @@ class APIViews(TestCase):
         self.assertEqual(resp.status_code, 200)
 
     def test_article_protocol_post_bad_encoding(self):
-        "a POST request with good data but bad content-encoding header returns a failed response"
+        "a POST request with good data but bad a content-encoding header returns a failed response"
         fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         post_body = json.load(open(fixture, "r"))["data"]
         resp = self.c.post(
             self.article_url, json.dumps(post_body), content_type="text/plain"
         )
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 406)
 
     def test_article_protocol_post_bad_data(self):
         "a POST request with bad data returns a failed response"
