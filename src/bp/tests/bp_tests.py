@@ -462,7 +462,7 @@ class APIViews(TestCase):
         self.assertEqual(resp.status_code, 200)
 
     def test_article_protocol_post_bad_encoding(self):
-        "a POST request with good data but bad a content-encoding header returns a failed response"
+        "a POST request with good data but a bad content-encoding header returns a failed response"
         fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
         post_body = json.load(open(fixture, "r"))["data"]
         resp = self.c.post(
