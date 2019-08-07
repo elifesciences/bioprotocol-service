@@ -47,7 +47,7 @@ def article(request, msid):
             content_encoding = request.content_type.strip().lower()
             if (
                 "application/json" not in content_encoding
-                and settings.ELIFE_CONTENT_TYPE not in content_encoding
+                and settings.ELIFE_CONTENT_TYPE_GENERAL not in content_encoding
             ):
                 return error("unable to negotiate a content encoding", 406)
             try:

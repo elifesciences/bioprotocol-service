@@ -461,6 +461,18 @@ class APIViews(TestCase):
         )
         self.assertEqual(resp.status_code, 200)
 
+    def test_article_protocol_post_wonky_encoding_2(self):
+        "a POST request with good article data but a slightly wonky content_type still makes it through"
+        fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
+        post_body = json.load(open(fixture, "r"))["data"]
+        # (space in-between mime and parameters)
+        resp = self.c.post(
+            self.article_url,
+            json.dumps(post_body),
+            content_type="application/vnd.elife.bioprotocol+json; version=1",
+        )
+        self.assertEqual(resp.status_code, 200)
+
     def test_article_protocol_post_bad_encoding(self):
         "a POST request with good data but a bad content-encoding header returns a failed response"
         fixture = join(FIXTURE_DIR, "bp-post-to-elife.json")
