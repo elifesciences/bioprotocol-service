@@ -7,10 +7,8 @@ It is a Python and Django application.
 
 ## API
 
-`bioprotocol-service` can be accessed directly at [prod--bp.elifesciences.org](https://prod--bp.elifesciences.org/), and
-content is available at `/bioprotocol/article/{msid}` for example, [Homo Naledi](https://prod--bp.elifesciences.org/bioprotocol/article/9560)
-
-`bioprotocol-service` is available through the eLife API gateway at: https://api.elifesciences.org/bioprotocol/
+`bioprotocol-service` can be accessed directly at https://prod--bp.elifesciences.org/, and content is available at 
+`/bioprotocol/article/{msid}`, for example, [Homo Naledi](https://prod--bp.elifesciences.org/bioprotocol/article/9560).
 
 Example output:
 
@@ -49,6 +47,8 @@ Example output:
 }
 ```
 
+`bioprotocol-service` is available through the eLife API gateway at: https://api.elifesciences.org/bioprotocol/
+
 The availability of the API can be tested with [/ping](https://prod--bp.elifesciences.org/ping)
 
 The status of the API can be tested with [/status](https://prod--bp.elifesciences.org/status)
@@ -56,8 +56,9 @@ The status of the API can be tested with [/status](https://prod--bp.elifescience
 ## eLife updates of Bioprotocol data
 
 `bioprotocol-service` will monitor an AWS SQS queue for article publication notifications, download the article, convert
-it to a Bioprotocol-preferred structure and then POST the results to the Bioprotocol servers. This ensures Bioprotocol
-has the most recent set of published articles and relieves them of polling eLife infrastructure for new articles.
+it to a Bioprotocol-preferred structure and then HTTP POST the results to the Bioprotocol servers. This ensures 
+Bioprotocol has the most recent set of published articles and relieves them of polling eLife infrastructure for new 
+articles.
 
 Articles that fail to send to Bioprotocol can be re-sent with:
 
@@ -69,13 +70,13 @@ Bioprotocol data is sent to eLife's `bioprotocol-service` as it becomes availabl
 
 Bioprotocol data that fails to be ingested can be reloaded with:
 
-    ./reload_article_data_from_bp.sh
+    ./reload_article_data_from_bp.sh {msid}
 
-## installation
+## Installation
 
     ./install.sh
 
-## testing 
+## Testing 
 
     ./test.sh
 
