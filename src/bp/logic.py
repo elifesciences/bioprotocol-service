@@ -72,7 +72,7 @@ def protocol_data(msid):
 
 
 def last_updated():
-    """returns an iso8601 formatted date of the most recently updated row in db. 
+    """returns an iso8601 formatted date of the most recently updated row in db.
     returns None if no data in database."""
     try:
         ap = first(
