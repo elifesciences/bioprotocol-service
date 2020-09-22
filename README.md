@@ -1,6 +1,6 @@
 # bioprotocol-service
 
-`bioprotocol-service` is a microservice that receives requests from the [eLife journal](https://elifesciences.org) for 
+`bioprotocol-service` is an application that receives requests from the [eLife journal](https://elifesciences.org) for 
 [Bioprotocol](https://bio-protocol.org/) data and keeps Bioprotocol updated with newly published articles.
 
 It is a Python and Django application.
@@ -8,9 +8,8 @@ It is a Python and Django application.
 ## API
 
 `bioprotocol-service` can be accessed directly at https://prod--bp.elifesciences.org/, and content is available at 
-`/bioprotocol/article/{msid}`, for example, [Homo Naledi](https://prod--bp.elifesciences.org/bioprotocol/article/9560).
+`/bioprotocol/article/{msid}`, for example, [Homo Naledi](https://prod--bp.elifesciences.org/bioprotocol/article/9560):
 
-Example output:
 
 ```json
 {
@@ -56,13 +55,13 @@ The status of the API can be tested with [/status](https://prod--bp.elifescience
 ## eLife updates of Bioprotocol data
 
 `bioprotocol-service` will monitor an AWS SQS queue for article publication notifications, download the article, convert
-it to a Bioprotocol-preferred structure and then HTTP POST the results to the Bioprotocol servers. This ensures 
+it to a Bioprotocol-preferred data structure and then HTTP POST the results to the Bioprotocol servers. This ensures 
 Bioprotocol has the most recent set of published articles and relieves them of polling eLife infrastructure for new 
 articles.
 
 Articles that fail to send to Bioprotocol can be re-sent with:
 
-    ./resend_elife_article_to_bp.sh {msid}
+    ./resend-elife-article-to-bp.sh {msid}
 
 ## Bioprotocol updates of article data
 
@@ -70,7 +69,7 @@ Bioprotocol data is sent to eLife's `bioprotocol-service` as it becomes availabl
 
 Bioprotocol data that fails to be ingested can be reloaded with:
 
-    ./reload_article_data_from_bp.sh {msid}
+    ./reload-article-data-from-bp.sh {msid}
 
 ## Installation
 
@@ -79,6 +78,11 @@ Bioprotocol data that fails to be ingested can be reloaded with:
 ## Testing 
 
     ./test.sh
+
+## Maintenance
+
+    ./update-dependencies.sh
+    ./update-fixtures.sh
 
 ## Copyright & Licence
 
