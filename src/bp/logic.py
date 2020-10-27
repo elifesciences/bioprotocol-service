@@ -60,8 +60,8 @@ def serialise_protocol_data(apobj):
 
 
 def protocol_data(msid):
-    """returns a list of protocol data given an msid
-    raises ArticleProtocol.DoesNotExist if no data for given msid found"""
+    """returns a list of protocol data given an msid.
+    raises `ArticleProtocol.DoesNotExist` if no data for given `msid` found."""
     protocol_data = models.ArticleProtocol.objects.filter(msid=msid)
     if not protocol_data:
         raise models.ArticleProtocol.DoesNotExist()
