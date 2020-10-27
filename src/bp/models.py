@@ -2,7 +2,7 @@ from django.db import models
 
 
 class ArticleProtocol(models.Model):
-    msid = models.PositiveIntegerField()
+    msid = models.BigIntegerField()
     protocol_sequencing_number = models.CharField(max_length=25)
     protocol_title = models.CharField(max_length=500)
     is_protocol = models.BooleanField()
