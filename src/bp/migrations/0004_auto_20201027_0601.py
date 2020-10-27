@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('bp', '0003_auto_20190717_0501'),
+        ("bp", "0003_auto_20190717_0501"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='articleprotocol',
-            name='msid',
+            model_name="articleprotocol",
+            name="msid",
             field=models.BigIntegerField(),
         ),
     ]
