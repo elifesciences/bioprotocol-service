@@ -3,4 +3,5 @@ set -e
 ./install.sh
 source venv/bin/activate
 pyflakes src/
-black src/ --quiet
+# disabled until after python3.6 -> python3.8 upgrade.
+#black src/ --quiet

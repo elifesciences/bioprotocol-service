@@ -4,6 +4,7 @@ set -e
 source venv/bin/activate
 
 echo "installing ..."
+pip install pip wheel --upgrade
 pip install -r requirements.txt
 
 if [ ! -e app.cfg ]; then
