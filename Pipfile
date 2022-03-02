@@ -26,5 +26,7 @@ pytest-django = "~=3.5"
 pytest-freezegun = "~=0.3"
 pytest-socket = "~=0.3"
 pyflakes = "~=2.1"
-black = "==20.8b1"
+# depends on 'dataclasses' that is available for python3.6 but not python3.8 as it is built-in.
+# disabled until after python3.6 -> python3.8 upgrade.
+#black = "==20.8b1"
 responses = "~=0.10"
