@@ -156,3 +156,5 @@ APPEND_SLASH = False
 USER_AGENT = (
     "eLife/bioprotocol-service (https://github.com/elifesciences/bioprotocol-service)"
 )
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

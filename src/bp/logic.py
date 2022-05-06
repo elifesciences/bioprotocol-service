@@ -184,7 +184,7 @@ def add_result(result):
 
 
 def visit(data, pred, fn, coll=None):
-    "visits every value in the given data and applies `fn` when `pred` is true "
+    "visits every value in the given data and applies `fn` when `pred` is true"
     if pred(data):
         if coll is not None:
             data = fn(data, coll)
