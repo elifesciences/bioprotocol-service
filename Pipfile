@@ -4,7 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [requires]
-python_version = "3.6"
+python_version = "3.8"
 
 [packages]
 backoff = "~=1.8"
@@ -26,8 +26,5 @@ pytest-django = "~=3.5"
 pytest-freezegun = "~=0.3"
 pytest-socket = "~=0.3"
 pyflakes = "~=2.1"
-# depends on 'dataclasses' that is available for python3.6 but not python3.8 as it is built-in.
-# disabled until after python3.6 -> python3.8 upgrade.
-dataclasses = "==0.6"
 black = "*"
 responses = "~=0.10"
