@@ -9,7 +9,7 @@ python_version = "3.8"
 [packages]
 backoff = "~=1.8"
 boto3 = "~=1.9"
-newrelic = "*"
+newrelic = "~=7.2"
 # psycopg2 doesn't use semver.
 # psycopg2 2.9.x isn't compatible with django 2.2:
 # https://github.com/psycopg/psycopg2/issues/1293
