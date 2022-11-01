@@ -21,7 +21,7 @@ Django = "==3.2.*"
 uWSGI = "*"
 
 [dev-packages]
-pytest = "~=5.0"
+pytest = "~=7.2"
 pytest-django = "~=3.5"
 pytest-freezegun = "~=0.3"
 pytest-socket = "~=0.3"
