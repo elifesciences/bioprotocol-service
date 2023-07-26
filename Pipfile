@@ -27,4 +27,5 @@ pytest-freezegun = "~=0.3"
 pytest-socket = "~=0.3"
 pyflakes = "~=2.1"
 black = "*"
-responses = "~=0.10"
+# lsh@2023-07-26: pinned. 0.23.2 introduces incompatible major version bumps.
+responses = "==0.23.1"
