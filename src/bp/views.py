@@ -36,14 +36,12 @@ def status(request):
 def article(request, msid):
     try:
         if request.method != "POST":  # GET, HEAD
-
             art_data = logic.protocol_data(msid)
             return JsonResponse(
                 art_data, status=200, content_type=settings.ELIFE_CONTENT_TYPE
             )
 
         else:  # POST
-
             content_encoding = request.content_type.strip().lower()
             if (
                 "application/json" not in content_encoding

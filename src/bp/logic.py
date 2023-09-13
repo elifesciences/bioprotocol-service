@@ -363,7 +363,8 @@ def _deliver_protocol_data(msid, protocol_data):
 
 def deliver_protocol_data(msid, protocol_data):
     """POSTs protocol data to BioProtocol.
-    exponential backoff will attempt to deliver data N times. the first successful or final unsuccessful response is returned"""
+    exponential backoff will attempt to deliver data N times. the first successful or final unsuccessful response is returned
+    """
     try:
         return _deliver_protocol_data(msid, protocol_data)
     except (

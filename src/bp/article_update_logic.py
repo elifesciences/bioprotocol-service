@@ -1,7 +1,6 @@
 from django.conf import settings
 import json, boto3
 import logging
-import newrelic.agent
 from . import logic
 
 LOG = logging.getLogger()
@@ -70,6 +69,4 @@ def handler(json_event):
 
 def listen():
     handler_fn = handler
-    if settings.SQS["queue-name"] and settings.SQS["newrelic-monitoring"]:
-        handler_fn = newrelic.agent.background_task()(handler)
     _listen(handler_fn)
